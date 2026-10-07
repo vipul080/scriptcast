@@ -1,0 +1,43 @@
+{
+  "name": "democast",
+  "version": "0.1.0",
+  "description": "Write a script, get a polished demo video of your web app. Re-run it whenever your UI changes.",
+  "type": "module",
+  "bin": {
+    "democast": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "demo": "tsx src/cli.ts record examples/todo/demo.yml",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "demo",
+    "video",
+    "screen-recording",
+    "playwright",
+    "gif",
+    "screencast",
+    "readme",
+    "cli"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.10",
+    "commander": "^15.0.0",
+    "playwright": "^1.63.0",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

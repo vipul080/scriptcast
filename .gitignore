@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.mp4
+*.gif
+!assets/*.gif
+!assets/*.mp4
+.DS_Store

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Today</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: start center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+      background: #f6f7fb; color: #1d1d27;
+    }
+    main { width: 560px; margin-top: 90px; }
+    h1 { font-size: 40px; margin: 0 0 6px; letter-spacing: -0.02em; }
+    .sub { color: #8a8a99; margin: 0 0 28px; font-size: 16px; }
+    form { display: flex; gap: 10px; margin-bottom: 22px; }
+    input[type=text] {
+      flex: 1; font: inherit; font-size: 17px; padding: 14px 16px;
+      border: 1.5px solid #e2e3ec; border-radius: 12px; background: #fff; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input[type=text]:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.15); }
+    button {
+      font: inherit; font-size: 16px; font-weight: 600; padding: 0 22px; border: 0; border-radius: 12px;
+      background: #6366f1; color: #fff; cursor: pointer; transition: background .15s, transform .1s;
+    }
+    button:hover { background: #4f46e5; }
+    button:active { transform: scale(.97); }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    li label {
+      display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: #fff;
+      border: 1.5px solid #eceef5; border-radius: 12px; font-size: 17px; cursor: pointer;
+      animation: pop .3s ease-out; transition: border-color .15s;
+    }
+    li label:hover { border-color: #c7c9f5; }
+    li input { width: 20px; height: 20px; accent-color: #6366f1; }
+    li.done span { text-decoration: line-through; color: #a5a5b4; }
+    .count { margin-top: 18px; color: #8a8a99; font-size: 14px; }
+    @keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Today</h1>
+    <p class="sub">Small steps, every day.</p>
+    <form id="add">
+      <input type="text" id="new" placeholder="What needs to be done?" aria-label="What needs to be done?" autocomplete="off">
+      <button type="submit">Add</button>
+    </form>
+    <ul id="list"></ul>
+    <p class="count" id="count"></p>
+  </main>
+  <script>
+    const list = document.getElementById('list');
+    const input = document.getElementById('new');
+    const count = document.getElementById('count');
+
+    function updateCount() {
+      const left = list.querySelectorAll('li:not(.done)').length;
+      count.textContent = `${left} ${left === 1 ? 'task' : 'tasks'} left`;
+    }
+
+    function add(text) {
+      const li = document.createElement('li');
+      li.innerHTML = '<label><input type="checkbox"><span></span></label>';
+      li.querySelector('span').textContent = text;
+      li.querySelector('input').addEventListener('change', (e) => {
+        li.classList.toggle('done', e.target.checked);
+        updateCount();
+      });
+      list.appendChild(li);
+      updateCount();
+    }
+
+    document.getElementById('add').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value.trim()) add(input.value.trim());
+      input.value = '';
+    });
+
+    add('Write the README');
+  </script>
+</body>
+</html>

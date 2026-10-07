@@ -1,0 +1,19 @@
+url: ./index.html
+displayUrl: todo.app
+viewport: { width: 1280, height: 800 }
+
+output:
+  file: demo.mp4
+  gif: true
+  background: aurora
+
+steps:
+  - wait: 600ms
+  - type: { into: What needs to be done?, text: Record a demo video }
+  - press: Enter
+  - type: Ship democast v0.1
+  - click: Add
+  - wait: 500ms
+  - click: Write the README
+  - click: Record a demo video
+  - wait: 1s
