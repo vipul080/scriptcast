@@ -217,10 +217,10 @@ class FrameSource {
   }
 }
 
-// Prefer the ffmpeg that ships with democast so users don't have to install one.
-// DEMOCAST_FFMPEG overrides it; a system ffmpeg is the last resort.
+// Prefer the ffmpeg that ships with demoreel so users don't have to install one.
+// DEMOREEL_FFMPEG overrides it; a system ffmpeg is the last resort.
 function ffmpegPath(): string {
-  if (process.env.DEMOCAST_FFMPEG) return process.env.DEMOCAST_FFMPEG;
+  if (process.env.DEMOREEL_FFMPEG) return process.env.DEMOREEL_FFMPEG;
   try {
     return (createRequire(import.meta.url)('@ffmpeg-installer/ffmpeg') as { path: string }).path;
   } catch {

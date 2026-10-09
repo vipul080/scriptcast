@@ -8,7 +8,7 @@ import { parseScript } from '../src/script.js';
 const dir = dirname(fileURLToPath(new URL('./fixtures/tricky.html', import.meta.url)));
 const script = (steps: string, extra = '') => parseScript(`url: ./tricky.html\n${extra}\nsteps:\n${steps}`, dir);
 
-describe('democast check', () => {
+describe('demoreel check', () => {
   it('runs a script that scrolls, waits and types', async () => {
     const log: string[] = [];
     const result = await check(

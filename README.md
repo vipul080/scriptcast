@@ -1,13 +1,13 @@
 <div align="center">
 
-# democast
+# demoreel
 
 **Write a script. Get a polished demo video of your web app.**<br>
 Re-run it whenever your UI changes.
 
-![democast demo](assets/demo.gif)
+![demoreel demo](assets/demo.gif)
 
-<sub>☝️ This video was made by democast from a short script. No screen recorder, no editing.</sub>
+<sub>☝️ This video was made by demoreel from a short script. No screen recorder, no editing.</sub>
 
 </div>
 
@@ -15,7 +15,7 @@ Re-run it whenever your UI changes.
 
 Recording a product demo by hand is slow: you click through your app, flub a step, start over, then spend an hour zooming and trimming in an editor. Next week the UI changes and the video is out of date.
 
-**democast** turns the demo into code. You describe the steps; it drives a real browser and renders a video with:
+**demoreel** turns the demo into code. You describe the steps; it drives a real browser and renders a video with:
 
 - 🔍 **Auto-zoom** that follows the action, then eases back out
 - 🖱️ **Smooth cursor** that glides between clicks, with click ripples
@@ -27,14 +27,14 @@ Recording a product demo by hand is slow: you click through your app, flub a ste
 ## Quick start
 
 ```bash
-npx democast init              # creates demo.yml
-npx democast check demo.yml    # runs every step in seconds to make sure it works
-npx democast record demo.yml   # makes the video
+npx demoreel init              # creates demo.yml
+npx demoreel check demo.yml    # runs every step in seconds to make sure it works
+npx demoreel record demo.yml   # makes the video
 ```
 
 That's it — you get `demo.mp4` (and `demo.gif` if you ask for one).
 
-> Requires Node 18+. Nothing else to install: democast brings its own ffmpeg, and downloads its browser automatically the first time it runs.
+> Requires Node 18+. Nothing else to install: demoreel brings its own ffmpeg, and downloads its browser automatically the first time it runs.
 
 ## Writing a script
 
@@ -63,7 +63,7 @@ steps:
 
 Write targets the way you'd describe them to a person: **button or link text, a field's label or placeholder, or any visible text**. CSS selectors (`#submit`, `.card > button`) work too.
 
-When several things match, democast picks the best one:
+When several things match, demoreel picks the best one:
 
 1. **Exact matches beat partial ones.** `click: Save` prefers a "Save" button over "Save changes" or "Saved items".
 2. **Buttons and links beat form fields, which beat plain text.** A "Save" button wins over a heading that says "Save time".
@@ -106,18 +106,18 @@ When several things match, democast picks the best one:
 ### CLI
 
 ```bash
-democast check demo.yml             # dry run: checks every step works, in seconds
-democast record demo.yml            # record and render
-democast record demo.yml -o out.mp4 # choose output file
-democast record demo.yml --gif      # also export a GIF
-democast record demo.yml --headed   # watch the browser while it records
-democast init                       # create a starter script
+demoreel check demo.yml             # dry run: checks every step works, in seconds
+demoreel record demo.yml            # record and render
+demoreel record demo.yml -o out.mp4 # choose output file
+demoreel record demo.yml --gif      # also export a GIF
+demoreel record demo.yml --headed   # watch the browser while it records
+demoreel init                       # create a starter script
 ```
 
 ## Try the example
 
 ```bash
-git clone https://github.com/vipul080/democast && cd democast
+git clone https://github.com/vipul080/demoreel && cd demoreel
 npm install
 npm run demo   # renders examples/todo/demo.mp4
 ```
@@ -132,7 +132,7 @@ npm run demo   # renders examples/todo/demo.mp4
 
 - [x] Captions (`say: Now invite your team`)
 - [x] Smart element matching with `in:` / `nth:`
-- [x] `democast check` dry runs
+- [x] `demoreel check` dry runs
 - [ ] Use in CI: GitHub Action that regenerates demo videos on every release
 - [ ] Dark-mode window theme and custom window styles
 - [ ] Mobile viewports with device frames
@@ -143,7 +143,7 @@ Have an idea? [Open an issue](../../issues) — feature requests are very welcom
 
 ## Contributing
 
-PRs are welcome! To work on democast locally:
+PRs are welcome! To work on demoreel locally:
 
 ```bash
 npm install
