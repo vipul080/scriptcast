@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- **GitHub Action**: `uses: vipul080/scriptcast@v0` records your demo in CI, can start your app and wait for it, and can commit the fresh video/GIF back to your repo. scriptcast's own README demo is now generated this way.
+- First run downloads a 3× smaller browser (headless shell only).
+- Clean progress output in CI logs, and the output folder is created if it doesn't exist.
+
 ## 0.2.0
 
 - **Captions**: `say: Invite your team` shows a caption until the next one; `say: { text, for: 2s }` for a fixed time.

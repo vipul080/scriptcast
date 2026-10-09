@@ -264,7 +264,9 @@ async function launch(headed: boolean, log: (msg: string) => void): Promise<Brow
     log('● First run: downloading the browser scriptcast uses (one time only)...');
     const require = createRequire(import.meta.url);
     const cli = join(dirname(require.resolve('playwright/package.json')), 'cli.js');
-    const result = spawnSync(process.execPath, [cli, 'install', 'chromium'], { stdio: 'inherit' });
+    // Headless recording only needs the small headless shell; --headed needs full Chromium.
+    const args = headed ? ['install', 'chromium'] : ['install', '--only-shell', 'chromium'];
+    const result = spawnSync(process.execPath, [cli, ...args], { stdio: 'inherit' });
     if (result.status !== 0) throw new Error('Could not download the browser. Try: npx playwright install chromium');
     return chromium.launch({ headless: !headed });
   }

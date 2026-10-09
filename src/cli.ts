@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { Command } from 'commander';
 import { check, record } from './recorder.js';
 import { render, toGif } from './renderer.js';
@@ -32,6 +32,24 @@ steps:
   - wait: 1s
 `;
 
+// A live-updating percentage in a terminal; a few plain lines in CI logs.
+function progressPrinter(): (fraction: number) => void {
+  if (process.stdout.isTTY) {
+    return (f) => {
+      process.stdout.write(`\r● Rendering ${String(Math.round(f * 100)).padStart(3)}%`);
+      if (f >= 1) process.stdout.write('\n');
+    };
+  }
+  let lastQuarter = -1;
+  return (f) => {
+    const quarter = Math.floor(f * 4);
+    if (quarter !== lastQuarter) {
+      lastQuarter = quarter;
+      console.log(`● Rendering ${quarter * 25}%`);
+    }
+  };
+}
+
 const program = new Command()
   .name('scriptcast')
   .description('Write a script, get a polished demo video of your web app.')
@@ -49,19 +67,25 @@ program
     if (opts.out) script.output.file = resolve(opts.out);
     if (opts.gif) script.output.gif = true;
 
+    mkdirSync(dirname(script.output.file), { recursive: true });
+
     console.log(`● Recording ${script.displayUrl}`);
     const rec = await record(script, { headed: opts.headed, log: (m) => console.log(m) });
 
-    process.stdout.write('● Rendering   0%');
-    await render(rec, script.output, script.displayUrl, (f) =>
-      process.stdout.write(`\r● Rendering ${String(Math.round(f * 100)).padStart(3)}%`),
-    );
-    console.log(`\n✔ ${script.output.file}`);
+    await render(rec, script.output, script.displayUrl, progressPrinter());
+    console.log(`✔ ${script.output.file}`);
+    const outputs: Record<string, string> = { video: script.output.file };
 
     if (script.output.gif) {
       const gif = script.output.file.replace(/\.[^.]+$/, '') + '.gif';
       await toGif(script.output.file, gif);
       console.log(`✔ ${gif}`);
+      outputs.gif = gif;
+    }
+
+    // When running inside GitHub Actions, expose the file paths as step outputs.
+    if (process.env.GITHUB_OUTPUT) {
+      appendFileSync(process.env.GITHUB_OUTPUT, Object.entries(outputs).map(([k, v]) => `${k}=${v}\n`).join(''));
     }
   });
 

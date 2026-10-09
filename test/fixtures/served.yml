@@ -1,0 +1,8 @@
+# Used by CI to test the GitHub Action against a running web server.
+url: http://localhost:8080/index.html
+displayUrl: todo.app
+output: { file: ../../out/served.mp4 }
+steps:
+  - say: Served over HTTP
+  - type: { into: What needs to be done?, text: Recorded in CI }
+  - press: Enter

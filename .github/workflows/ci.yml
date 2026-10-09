@@ -24,3 +24,20 @@ jobs:
         with:
           name: demo-video
           path: examples/todo/demo.mp4
+
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: scriptcast
+        uses: ./
+        with:
+          script: test/fixtures/served.yml
+          args: --gif
+          start: python3 -m http.server 8080 --directory examples/todo
+          wait-on: http://localhost:8080/index.html
+      - name: Check the Action produced a video and a GIF
+        run: |
+          test -s "${{ steps.scriptcast.outputs.video }}"
+          test -s "${{ steps.scriptcast.outputs.gif }}"
+          ls -la "${{ steps.scriptcast.outputs.video }}" "${{ steps.scriptcast.outputs.gif }}"

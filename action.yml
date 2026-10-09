@@ -1,0 +1,109 @@
+name: scriptcast
+description: Record a polished demo video of your web app from a YAML script, and keep it up to date automatically.
+author: Vipul Shukla
+branding:
+  icon: video
+  color: purple
+
+inputs:
+  script:
+    description: Path to your scriptcast script, e.g. demo.yml
+    required: true
+  args:
+    description: Extra flags for "scriptcast record", e.g. "--gif -o docs/demo.mp4"
+    required: false
+    default: ''
+  start:
+    description: Command that starts your app before recording, e.g. "npm run dev". It runs in the background.
+    required: false
+    default: ''
+  wait-on:
+    description: URL to wait for before recording, e.g. http://localhost:3000
+    required: false
+    default: ''
+  wait-timeout:
+    description: Seconds to wait for wait-on before giving up
+    required: false
+    default: '120'
+  commit:
+    description: Commit the rendered video (and GIF) back to the repository
+    required: false
+    default: 'false'
+  commit-message:
+    description: Commit message used when commit is true
+    required: false
+    default: Update demo video
+
+outputs:
+  video:
+    description: Path to the rendered video
+    value: ${{ steps.record.outputs.video }}
+  gif:
+    description: Path to the rendered GIF, if one was made
+    value: ${{ steps.record.outputs.gif }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Install scriptcast
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        npm ci --no-audit --no-fund
+        npm run build
+        node node_modules/playwright/cli.js install --with-deps --only-shell chromium
+
+    - name: Start app
+      if: inputs.start != ''
+      shell: bash
+      env:
+        START: ${{ inputs.start }}
+      run: nohup bash -c "$START" > "$RUNNER_TEMP/scriptcast-app.log" 2>&1 &
+
+    - name: Wait for app
+      if: inputs.wait-on != ''
+      shell: bash
+      env:
+        URL: ${{ inputs.wait-on }}
+        TIMEOUT: ${{ inputs.wait-timeout }}
+      run: |
+        for _ in $(seq 1 "$TIMEOUT"); do
+          if curl -sf -o /dev/null "$URL"; then echo "$URL is up"; exit 0; fi
+          sleep 1
+        done
+        echo "::error::$URL did not respond within $TIMEOUT seconds"
+        cat "$RUNNER_TEMP/scriptcast-app.log" 2>/dev/null || true
+        exit 1
+
+    - name: Record demo
+      id: record
+      shell: bash
+      env:
+        SCRIPT: ${{ inputs.script }}
+        ARGS: ${{ inputs.args }}
+      # ARGS is intentionally unquoted so it splits into separate flags.
+      run: node "$GITHUB_ACTION_PATH/dist/cli.js" record "$SCRIPT" $ARGS
+
+    - name: Commit demo
+      if: inputs.commit == 'true'
+      shell: bash
+      env:
+        VIDEO: ${{ steps.record.outputs.video }}
+        GIF: ${{ steps.record.outputs.gif }}
+        MESSAGE: ${{ inputs.commit-message }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add -f -- "$VIDEO" ${GIF:+"$GIF"}
+        if git diff --cached --quiet; then
+          echo "Demo unchanged, nothing to commit"
+          exit 0
+        fi
+        git commit -m "$MESSAGE"
+        branch=$(git symbolic-ref --short -q HEAD || echo "$DEFAULT_BRANCH")
+        git push origin "HEAD:$branch"

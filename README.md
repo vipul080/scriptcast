@@ -3,11 +3,11 @@
 # scriptcast
 
 **Write a script. Get a polished demo video of your web app.**<br>
-Re-run it whenever your UI changes.
+Re-run it whenever your UI changes — or let GitHub Actions do it for you.
 
 ![scriptcast demo](assets/demo.gif)
 
-<sub>☝️ This video was made by scriptcast from a short script. No screen recorder, no editing.</sub>
+<sub>☝️ Made by scriptcast from a [10-line script](examples/todo/demo.yml), and re-recorded automatically by its own GitHub Action. No screen recorder, no editing.</sub>
 
 </div>
 
@@ -22,7 +22,7 @@ Recording a product demo by hand is slow: you click through your app, flub a ste
 - ⌨️ **Natural typing**, letter by letter
 - 💬 **Captions** that explain each step (`say: Invite your team`)
 - 🎨 **Beautiful framing**: a gradient background, browser window and soft shadow
-- 🔁 **Reproducible output**: change your UI, re-run, get a fresh video
+- 🔁 **Always up to date**: a GitHub Action re-records your demo on every release
 
 ## Quick start
 
@@ -114,6 +114,50 @@ scriptcast record demo.yml --headed   # watch the browser while it records
 scriptcast init                       # create a starter script
 ```
 
+## Keep your demo up to date (GitHub Action)
+
+Demo videos go stale the moment your UI changes. Add this workflow and your demo re-records itself on every release:
+
+```yaml
+# .github/workflows/demo.yml
+name: Update demo
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: npm ci
+      - uses: vipul080/scriptcast@v0
+        with:
+          script: demo.yml
+          start: npm run dev                # start your app first
+          wait-on: http://localhost:3000    # and wait until it's up
+          args: --gif -o docs/demo.mp4
+          commit: true                      # commit the fresh video + GIF
+```
+
+| Input | | |
+| --- | --- | --- |
+| `script` | required | Path to your script |
+| `args` | | Extra `scriptcast record` flags, e.g. `--gif -o docs/demo.mp4` |
+| `start` | | Command that starts your app (runs in the background) |
+| `wait-on` | | URL to wait for before recording |
+| `wait-timeout` | `120` | Seconds to wait for `wait-on` |
+| `commit` | `false` | Commit the video (and GIF) back to the repo |
+| `commit-message` | `Update demo video` | |
+
+Outputs: `video` and `gif` (file paths), handy for uploading as an artifact or attaching to a release.
+
 ## Try the example
 
 ```bash
@@ -133,7 +177,7 @@ npm run demo   # renders examples/todo/demo.mp4
 - [x] Captions (`say: Now invite your team`)
 - [x] Smart element matching with `in:` / `nth:`
 - [x] `scriptcast check` dry runs
-- [ ] Use in CI: GitHub Action that regenerates demo videos on every release
+- [x] GitHub Action that keeps demo videos up to date
 - [ ] Dark-mode window theme and custom window styles
 - [ ] Mobile viewports with device frames
 - [ ] Record terminal sessions alongside the browser

@@ -1,0 +1,24 @@
+# Re-records the README demo with scriptcast's own GitHub Action.
+name: Update README demo
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: ./
+        with:
+          script: examples/todo/demo.yml
+          args: --gif -o assets/demo.mp4
+          commit: true
+          commit-message: Update README demo

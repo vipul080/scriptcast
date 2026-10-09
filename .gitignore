@@ -5,3 +5,4 @@ dist/
 !assets/*.gif
 !assets/*.mp4
 .DS_Store
+out/
