@@ -3,14 +3,25 @@ import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parse } from 'yaml';
 
+// What to click/hover/type into. Written the way you'd describe it to a person.
+export interface Target {
+  text: string;
+  // Prefer the match nearest to this text (e.g. a section heading), or inside this CSS selector.
+  in?: string;
+  // Pick the Nth match (1-based) when there are several.
+  nth?: number;
+}
+
 export type Step =
   | { action: 'goto'; url: string }
-  | { action: 'click'; target: string }
-  | { action: 'hover'; target: string }
-  | { action: 'type'; text: string; into?: string }
+  | { action: 'click'; target: Target }
+  | { action: 'hover'; target: Target }
+  | { action: 'type'; text: string; into?: Target }
   | { action: 'press'; key: string }
   | { action: 'wait'; ms: number }
-  | { action: 'scroll'; by: number };
+  | { action: 'waitFor'; target: Target }
+  | { action: 'scroll'; by: number }
+  | { action: 'say'; text: string; ms?: number };
 
 export interface OutputOptions {
   file: string;
@@ -25,11 +36,15 @@ export interface Script {
   url: string;
   displayUrl: string;
   viewport: { width: number; height: number };
+  // CSS selectors to hide while recording (cookie banners, chat widgets, ...).
+  hide: string[];
   output: OutputOptions;
   steps: Step[];
 }
 
 export class ScriptError extends Error {}
+
+export const ACTIONS = ['goto', 'click', 'hover', 'type', 'press', 'wait', 'waitFor', 'scroll', 'say'] as const;
 
 export function parseDuration(value: unknown, where: string): number {
   if (typeof value === 'number') return value;
@@ -40,8 +55,9 @@ export function parseDuration(value: unknown, where: string): number {
   throw new ScriptError(`${where}: expected a duration like 500ms or 1.5s, got ${JSON.stringify(value)}`);
 }
 
-function resolveUrl(url: string, baseDir: string): string {
+export function resolveUrl(url: string, baseDir: string, base?: string): string {
   if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return url;
+  if (base && url.startsWith('/') && !base.startsWith('file:')) return new URL(url, base).href;
   const local = resolve(baseDir, url);
   if (existsSync(local)) return pathToFileURL(local).href;
   return `http://${url}`;
@@ -52,7 +68,14 @@ function defaultDisplayUrl(url: string): string {
   return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 }
 
-function parseStep(raw: unknown, index: number, baseDir: string): Step {
+export function describeTarget(t: Target): string {
+  let s = `"${t.text}"`;
+  if (t.in) s += ` in "${t.in}"`;
+  if (t.nth) s += ` (#${t.nth})`;
+  return s;
+}
+
+function parseStep(raw: unknown, index: number, baseDir: string, startUrl: string): Step {
   const where = `step ${index + 1}`;
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     throw new ScriptError(`${where}: each step should look like "- click: Login"`);
@@ -67,17 +90,29 @@ function parseStep(raw: unknown, index: number, baseDir: string): Step {
     if (typeof v !== 'string' && typeof v !== 'number') throw new ScriptError(`${where}: ${what} should be text`);
     return String(v);
   };
+  const target = (v: unknown, what: string): Target => {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const o = v as Record<string, unknown>;
+      const nth = o.nth === undefined ? undefined : Number(o.nth);
+      if (nth !== undefined && (!Number.isInteger(nth) || nth < 1)) {
+        throw new ScriptError(`${where}: ${what}.nth should be 1, 2, 3, ...`);
+      }
+      return { text: str(o.text, `${what}.text`), in: o.in === undefined ? undefined : str(o.in, `${what}.in`), nth };
+    }
+    return { text: str(v, what) };
+  };
 
   switch (action) {
     case 'goto':
-      return { action, url: resolveUrl(str(value, 'goto'), baseDir) };
+      return { action, url: resolveUrl(str(value, 'goto'), baseDir, startUrl) };
     case 'click':
     case 'hover':
-      return { action, target: str(value, action) };
+    case 'waitFor':
+      return { action, target: target(value, action) };
     case 'type':
       if (value && typeof value === 'object') {
         const v = value as Record<string, unknown>;
-        return { action, text: str(v.text, 'type.text'), into: v.into === undefined ? undefined : str(v.into, 'type.into') };
+        return { action, text: str(v.text, 'type.text'), into: v.into === undefined ? undefined : target(v.into, 'type.into') };
       }
       return { action, text: str(value, 'type') };
     case 'press':
@@ -87,18 +122,23 @@ function parseStep(raw: unknown, index: number, baseDir: string): Step {
     case 'scroll':
       if (typeof value !== 'number') throw new ScriptError(`${where}: scroll takes a number of pixels, e.g. "scroll: 400"`);
       return { action, by: value };
+    case 'say':
+      if (value && typeof value === 'object') {
+        const v = value as Record<string, unknown>;
+        return { action, text: str(v.text, 'say.text'), ms: v.for === undefined ? undefined : parseDuration(v.for, where) };
+      }
+      return { action, text: str(value, 'say') };
     default:
-      throw new ScriptError(`${where}: unknown action "${action}". Try one of: goto, click, hover, type, press, wait, scroll`);
+      throw new ScriptError(`${where}: unknown action "${action}". Try one of: ${ACTIONS.join(', ')}`);
   }
 }
 
-export function loadScript(path: string): Script {
-  const baseDir = dirname(resolve(path));
+export function parseScript(source: string, baseDir: string): Script {
   let doc: Record<string, any>;
   try {
-    doc = parse(readFileSync(path, 'utf8')) ?? {};
+    doc = parse(source) ?? {};
   } catch (err) {
-    throw new ScriptError(`Couldn't read ${path}: ${(err as Error).message}`);
+    throw new ScriptError(`Your script isn't valid YAML: ${(err as Error).message}`);
   }
 
   if (typeof doc.url !== 'string') throw new ScriptError('Your script needs a "url:" to start from');
@@ -106,10 +146,12 @@ export function loadScript(path: string): Script {
 
   const url = resolveUrl(doc.url, baseDir);
   const out = doc.output ?? {};
+  const hide = doc.hide === undefined ? [] : Array.isArray(doc.hide) ? doc.hide.map(String) : [String(doc.hide)];
   return {
     url,
     displayUrl: doc.displayUrl ?? defaultDisplayUrl(url),
     viewport: { width: doc.viewport?.width ?? 1280, height: doc.viewport?.height ?? 800 },
+    hide,
     output: {
       file: resolve(baseDir, out.file ?? 'demo.mp4'),
       gif: out.gif ?? false,
@@ -118,6 +160,16 @@ export function loadScript(path: string): Script {
       height: out.height ?? 1080,
       background: out.background ?? 'aurora',
     },
-    steps: doc.steps.map((s: unknown, i: number) => parseStep(s, i, baseDir)),
+    steps: doc.steps.map((s: unknown, i: number) => parseStep(s, i, baseDir, url)),
   };
+}
+
+export function loadScript(path: string): Script {
+  let source: string;
+  try {
+    source = readFileSync(path, 'utf8');
+  } catch (err) {
+    throw new ScriptError(`Couldn't read ${path}: ${(err as Error).message}`);
+  }
+  return parseScript(source, dirname(resolve(path)));
 }

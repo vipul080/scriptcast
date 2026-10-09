@@ -8,12 +8,13 @@ output:
   background: aurora
 
 steps:
-  - wait: 600ms
+  - say: Add tasks as fast as you can type
   - type: { into: What needs to be done?, text: Record a demo video }
   - press: Enter
-  - type: Ship democast v0.1
+  - type: Ship democast v0.2
   - click: Add
-  - wait: 500ms
+  - say: Check them off when you're done
   - click: Write the README
   - click: Record a demo video
+  - say: ""
   - wait: 1s

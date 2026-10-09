@@ -1,6 +1,6 @@
 {
   "name": "democast",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Write a script, get a polished demo video of your web app. Re-run it whenever your UI changes.",
   "type": "module",
   "bin": {
@@ -13,7 +13,9 @@
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "demo": "tsx src/cli.ts record examples/todo/demo.yml",
-    "typecheck": "tsc --noEmit"
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run build"
   },
   "keywords": [
     "demo",
@@ -30,6 +32,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@napi-rs/canvas": "^1.0.10",
     "commander": "^15.0.0",
     "playwright": "^1.63.0",

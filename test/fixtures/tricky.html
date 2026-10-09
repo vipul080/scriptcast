@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tricky page</title>
+  <style>
+    body { font-family: sans-serif; margin: 40px; }
+    section { border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; }
+    .cookie-banner { position: fixed; bottom: 0; left: 0; right: 0; background: #222; color: #fff; padding: 20px; }
+    #far { margin-top: 2000px; }
+  </style>
+</head>
+<body>
+  <h1>Save time with our app!</h1>
+  <a href="#saved">Saved items</a>
+
+  <section id="profile">
+    <h2>Profile</h2>
+    <input placeholder="Your name" aria-label="Name">
+    <button id="save-profile">Save</button>
+  </section>
+
+  <section id="settings">
+    <h2>Settings</h2>
+    <label>Email <input id="email"></label>
+    <button id="save-settings">Save</button>
+    <button id="save-changes">Save changes</button>
+  </section>
+
+  <button id="hidden-save" style="display:none">Save</button>
+  <p id="status">Nothing saved yet</p>
+
+  <div class="cookie-banner">We use cookies <button>Accept all</button></div>
+
+  <button id="far">Way down here</button>
+
+  <script>
+    for (const b of document.querySelectorAll('button[id^=save]')) {
+      b.addEventListener('click', () => (document.getElementById('status').textContent = `Clicked ${b.id}`));
+    }
+    document.getElementById('far').addEventListener('click', () => (document.getElementById('status').textContent = 'Clicked far'));
+    setTimeout(() => {
+      const late = document.createElement('button');
+      late.textContent = 'Loaded later';
+      late.id = 'late';
+      document.body.prepend(late);
+    }, 1200);
+  </script>
+</body>
+</html>

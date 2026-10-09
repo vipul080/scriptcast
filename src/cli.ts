@@ -1,14 +1,21 @@
 #!/usr/bin/env node
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Command } from 'commander';
-import { record } from './recorder.js';
+import { check, record } from './recorder.js';
 import { render, toGif } from './renderer.js';
 import { loadScript } from './script.js';
 
-const STARTER = `# democast script — run with: npx democast record demo.yml
+const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string };
+
+const STARTER = `# democast script
+#   check it works:  npx democast check demo.yml
+#   make the video:  npx democast record demo.yml
 url: http://localhost:3000
 viewport: { width: 1280, height: 800 }
+
+# Hide things you don't want in the video (CSS selectors)
+# hide: [".cookie-banner", "#chat-widget"]
 
 output:
   file: demo.mp4
@@ -16,17 +23,19 @@ output:
   background: aurora   # aurora, sunset, ocean, candy, forest, midnight, mono, or any CSS color
 
 steps:
-  - wait: 500ms
+  - say: Sign in in seconds
   - click: Sign in
   - type: { into: Email, text: you@example.com }
   - press: Enter
-  - wait: 1.5s
+  - waitFor: Dashboard
+  - say: ""            # clear the caption
+  - wait: 1s
 `;
 
 const program = new Command()
   .name('democast')
   .description('Write a script, get a polished demo video of your web app.')
-  .version('0.1.0');
+  .version(version);
 
 program
   .command('record')
@@ -57,6 +66,22 @@ program
   });
 
 program
+  .command('check')
+  .argument('<script>', 'path to your demo script (.yml)')
+  .option('--headed', 'show the browser while checking')
+  .description('quickly run every step without recording, to make sure the script works')
+  .action(async (scriptPath: string, opts: { headed?: boolean }) => {
+    const script = loadScript(scriptPath);
+    const started = Date.now();
+    console.log(`● Checking ${script.displayUrl}`);
+    const { warnings } = await check(script, { headed: opts.headed, log: (m) => console.log(m) });
+    const secs = ((Date.now() - started) / 1000).toFixed(1);
+    const note = warnings ? ` (${warnings} warning${warnings > 1 ? 's' : ''} above)` : '';
+    console.log(`✔ All ${script.steps.length} steps work${note}. Took ${secs}s`);
+    console.log(`  Make the video with: democast record ${scriptPath}`);
+  });
+
+program
   .command('init')
   .argument('[file]', 'where to write the starter script', 'demo.yml')
   .description('create a starter demo script')
@@ -66,7 +91,7 @@ program
       process.exit(1);
     }
     writeFileSync(file, STARTER);
-    console.log(`✔ Created ${file}. Edit the steps, then run: npx democast record ${file}`);
+    console.log(`✔ Created ${file}. Edit the steps, then run: democast check ${file}`);
   });
 
 program.parseAsync().catch((err: Error) => {

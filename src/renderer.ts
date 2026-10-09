@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { createRequire } from 'node:module';
 import { createCanvas, loadImage, type Canvas, type Image, type SKRSContext2D } from '@napi-rs/canvas';
 import { trackCamera, type Camera } from './camera.js';
 import type { OutputOptions } from './script.js';
@@ -128,6 +129,76 @@ function drawCursor(ctx: SKRSContext2D, x: number, y: number, size: number, pres
   ctx.restore();
 }
 
+interface Caption {
+  text: string;
+  t0: number;
+  t1: number;
+}
+
+const CAPTION_FADE = 0.25;
+
+// Each caption lasts for its explicit duration, or until the next caption (an empty one clears it).
+function captionsOf(rec: Recording): Caption[] {
+  const said = rec.events.filter((e) => e.kind === 'caption');
+  return said
+    .map((c, i) => ({
+      text: c.text.trim(),
+      t0: c.t,
+      t1: c.ms !== undefined ? c.t + c.ms / 1000 : (said[i + 1]?.t ?? rec.end),
+    }))
+    .filter((c) => c.text);
+}
+
+function wrapText(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(/\s+/)) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && ctx.measureText(next).width > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawCaption(ctx: SKRSContext2D, caption: Caption, t: number, layout: Layout, outHeight: number) {
+  const fadeIn = Math.min(1, (t - caption.t0) / CAPTION_FADE);
+  const fadeOut = Math.min(1, (caption.t1 - t) / CAPTION_FADE);
+  const alpha = Math.max(0, Math.min(fadeIn, fadeOut));
+  if (alpha <= 0) return;
+
+  const size = Math.round(outHeight * 0.03);
+  ctx.save();
+  ctx.font = `600 ${size}px sans-serif`;
+  const lines = wrapText(ctx, caption.text, layout.page.w * 0.7);
+  const lineH = size * 1.35;
+  const padX = size * 1.1;
+  const padY = size * 0.65;
+  const w = Math.max(...lines.map((l) => ctx.measureText(l).width)) + padX * 2;
+  const h = lines.length * lineH + padY * 2;
+  const x = layout.page.x + (layout.page.w - w) / 2;
+  const y = layout.page.y + layout.page.h - h - outHeight * 0.045 + (1 - easeOut(fadeIn)) * size * 0.6;
+
+  ctx.globalAlpha = alpha;
+  ctx.shadowColor = 'rgba(0,0,0,0.25)';
+  ctx.shadowBlur = size * 0.8;
+  ctx.shadowOffsetY = size * 0.2;
+  ctx.fillStyle = 'rgba(20, 20, 28, 0.86)';
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, Math.min(h / 2, size * 1.2));
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => ctx.fillText(l, x + w / 2, y + padY + lineH * (i + 0.5)));
+  ctx.restore();
+}
+
 class FrameSource {
   private index = 0;
   private cachedIndex = -1;
@@ -146,8 +217,19 @@ class FrameSource {
   }
 }
 
+// Prefer the ffmpeg that ships with democast so users don't have to install one.
+// DEMOCAST_FFMPEG overrides it; a system ffmpeg is the last resort.
+function ffmpegPath(): string {
+  if (process.env.DEMOCAST_FFMPEG) return process.env.DEMOCAST_FFMPEG;
+  try {
+    return (createRequire(import.meta.url)('@ffmpeg-installer/ffmpeg') as { path: string }).path;
+  } catch {
+    return 'ffmpeg';
+  }
+}
+
 function startEncoder(out: OutputOptions) {
-  const ffmpeg = process.env.DEMOCAST_FFMPEG ?? 'ffmpeg';
+  const ffmpeg = ffmpegPath();
   const proc = spawn(
     ffmpeg,
     [
@@ -189,6 +271,7 @@ export async function render(
   const cameras = trackCamera(rec, out.fps, frameCount);
   const source = new FrameSource(rec);
   const clicks = rec.events.filter((e) => e.kind === 'click');
+  const captions = captionsOf(rec);
   const { page } = layout;
   const vw = rec.viewport.width;
   const vh = rec.viewport.height;
@@ -237,6 +320,10 @@ export async function render(
     drawCursor(ctx, p.x, p.y, 26 * (page.w / vw) * Math.sqrt(cam.zoom), pressed);
     ctx.restore();
 
+    for (const c of captions) {
+      if (t >= c.t0 && t <= c.t1) drawCaption(ctx, c, t, layout, out.height);
+    }
+
     const { data } = ctx.getImageData(0, 0, out.width, out.height);
     if (!proc.stdin.write(Buffer.from(data.buffer, data.byteOffset, data.byteLength))) {
       await once(proc.stdin, 'drain');
@@ -250,7 +337,7 @@ export async function render(
 }
 
 export async function toGif(mp4: string, gif: string) {
-  const ffmpeg = process.env.DEMOCAST_FFMPEG ?? 'ffmpeg';
+  const ffmpeg = ffmpegPath();
   const proc = spawn(
     ffmpeg,
     [

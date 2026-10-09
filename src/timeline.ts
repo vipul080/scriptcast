@@ -19,7 +19,9 @@ export type TimelineEvent =
   // Something worth zooming in on, e.g. the button being clicked or the input being typed into.
   | { kind: 'focus'; t0: number; t1: number; rect: Rect; zoom: number }
   // The page jumped (scroll / navigation), so any zoom target is stale.
-  | { kind: 'cut'; t: number };
+  | { kind: 'cut'; t: number }
+  // On-screen caption. Without an explicit duration it stays until the next caption.
+  | { kind: 'caption'; t: number; text: string; ms?: number };
 
 export interface Frame {
   t: number;
