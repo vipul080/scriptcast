@@ -32,7 +32,7 @@ npx scriptcast check demo.yml    # runs every step in seconds to make sure it wo
 npx scriptcast record demo.yml   # makes the video
 ```
 
-That's it — you get `demo.mp4` (and `demo.gif` if you ask for one).
+That's it, you get `demo.mp4` (and `demo.gif` if you ask for one).
 
 > Requires Node 18+. Nothing else to install: scriptcast brings its own ffmpeg, and downloads its browser automatically the first time it runs.
 
