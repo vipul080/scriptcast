@@ -1,10 +1,18 @@
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createRequire } from 'node:module';
-import { createCanvas, loadImage, type Canvas, type Image, type SKRSContext2D } from '@napi-rs/canvas';
+import { fileURLToPath } from 'node:url';
+import { createCanvas, GlobalFonts, loadImage, type Canvas, type Image, type SKRSContext2D } from '@napi-rs/canvas';
 import { trackCamera, type Camera } from './camera.js';
 import type { OutputOptions } from './script.js';
 import { cursorAt, easeOut, type Recording } from './timeline.js';
+
+// Ship our own font so videos look the same everywhere. Linux CI machines
+// often have no nice sans-serif font, and text would fall back to a serif one.
+const FONT = 'Inter';
+for (const file of ['Inter-Regular.ttf', 'Inter-SemiBold.ttf']) {
+  GlobalFonts.registerFromPath(fileURLToPath(new URL(`../fonts/${file}`, import.meta.url)), FONT);
+}
 
 const BACKGROUNDS: Record<string, string[]> = {
   aurora: ['#7f7fd5', '#86a8e7', '#91eae4'],
@@ -95,7 +103,7 @@ function drawBackdrop(out: OutputOptions, layout: Layout, displayUrl: string): C
   roundRect(ctx, win.x + (win.w - pillW) / 2, win.y + (bar - pillH) / 2, pillW, pillH, pillH / 2);
   ctx.fill();
   ctx.fillStyle = '#55555d';
-  ctx.font = `${Math.round(bar * 0.34)}px sans-serif`;
+  ctx.font = `${Math.round(bar * 0.34)}px ${FONT}, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(displayUrl, win.x + win.w / 2, win.y + bar / 2 + 1);
@@ -173,7 +181,7 @@ function drawCaption(ctx: SKRSContext2D, caption: Caption, t: number, layout: La
 
   const size = Math.round(outHeight * 0.03);
   ctx.save();
-  ctx.font = `600 ${size}px sans-serif`;
+  ctx.font = `600 ${size}px ${FONT}, sans-serif`;
   const lines = wrapText(ctx, caption.text, layout.page.w * 0.7);
   const lineH = size * 1.35;
   const padX = size * 1.1;

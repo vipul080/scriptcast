@@ -3,6 +3,7 @@
 ## 0.3.0
 
 - **GitHub Action**: `uses: vipul080/scriptcast@v0` records your demo in CI, can start your app and wait for it, and can commit the fresh video/GIF back to your repo. scriptcast's own README demo is now generated this way.
+- Bundled the Inter font, so captions and the address bar look the same on every machine (Linux CI used to fall back to a serif font).
 - First run downloads a 3× smaller browser (headless shell only).
 - Clean progress output in CI logs, and the output folder is created if it doesn't exist.
 

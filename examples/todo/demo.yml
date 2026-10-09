@@ -11,7 +11,7 @@ steps:
   - say: Add tasks as fast as you can type
   - type: { into: What needs to be done?, text: Record a demo video }
   - press: Enter
-  - type: Ship scriptcast v0.2
+  - type: Ship scriptcast
   - click: Add
   - say: Check them off when you're done
   - click: Write the README
