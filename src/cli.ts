@@ -8,9 +8,9 @@ import { loadScript } from './script.js';
 
 const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string };
 
-const STARTER = `# demoreel script
-#   check it works:  npx demoreel check demo.yml
-#   make the video:  npx demoreel record demo.yml
+const STARTER = `# scriptcast script
+#   check it works:  npx scriptcast check demo.yml
+#   make the video:  npx scriptcast record demo.yml
 url: http://localhost:3000
 viewport: { width: 1280, height: 800 }
 
@@ -33,7 +33,7 @@ steps:
 `;
 
 const program = new Command()
-  .name('demoreel')
+  .name('scriptcast')
   .description('Write a script, get a polished demo video of your web app.')
   .version(version);
 
@@ -78,7 +78,7 @@ program
     const secs = ((Date.now() - started) / 1000).toFixed(1);
     const note = warnings ? ` (${warnings} warning${warnings > 1 ? 's' : ''} above)` : '';
     console.log(`✔ All ${script.steps.length} steps work${note}. Took ${secs}s`);
-    console.log(`  Make the video with: demoreel record ${scriptPath}`);
+    console.log(`  Make the video with: scriptcast record ${scriptPath}`);
   });
 
 program
@@ -91,7 +91,7 @@ program
       process.exit(1);
     }
     writeFileSync(file, STARTER);
-    console.log(`✔ Created ${file}. Edit the steps, then run: demoreel check ${file}`);
+    console.log(`✔ Created ${file}. Edit the steps, then run: scriptcast check ${file}`);
   });
 
 program.parseAsync().catch((err: Error) => {

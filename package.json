@@ -1,10 +1,10 @@
 {
-  "name": "demoreel",
+  "name": "scriptcast",
   "version": "0.2.0",
   "description": "Write a script, get a polished demo video of your web app. Re-run it whenever your UI changes.",
   "type": "module",
   "bin": {
-    "demoreel": "dist/cli.js"
+    "scriptcast": "dist/cli.js"
   },
   "files": [
     "dist"

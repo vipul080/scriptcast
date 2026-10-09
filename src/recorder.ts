@@ -29,7 +29,7 @@ export function describe(step: Step): string {
 }
 
 export interface RunOptions {
-  // Skip animations and shorten pauses. Used by `demoreel check`.
+  // Skip animations and shorten pauses. Used by `scriptcast check`.
   fast?: boolean;
   headed?: boolean;
   log?: (msg: string) => void;
@@ -60,7 +60,7 @@ function coveredBy(el: Element, { x, y }: { x: number; y: number }): string | nu
 }
 
 const BOT_CHECK_MESSAGE =
-  'this site is showing a "verify you are human" check to automated browsers, so demoreel can\'t record it. ' +
+  'this site is showing a "verify you are human" check to automated browsers, so scriptcast can\'t record it. ' +
   'Record your own app instead (localhost or a staging URL).';
 
 async function isBotCheck(page: Page): Promise<boolean> {
@@ -261,7 +261,7 @@ async function launch(headed: boolean, log: (msg: string) => void): Promise<Brow
     return await chromium.launch({ headless: !headed });
   } catch (err) {
     if (!/Executable doesn't exist|install/i.test((err as Error).message)) throw err;
-    log('● First run: downloading the browser demoreel uses (one time only)...');
+    log('● First run: downloading the browser scriptcast uses (one time only)...');
     const require = createRequire(import.meta.url);
     const cli = join(dirname(require.resolve('playwright/package.json')), 'cli.js');
     const result = spawnSync(process.execPath, [cli, 'install', 'chromium'], { stdio: 'inherit' });
