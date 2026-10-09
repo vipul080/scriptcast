@@ -3,7 +3,7 @@
 # scriptcast
 
 **Write a script. Get a polished demo video of your web app.**<br>
-Re-run it whenever your UI changes — or let GitHub Actions do it for you.
+Re-run it whenever your UI changes or let GitHub Actions do it for you.
 
 ![scriptcast demo](assets/demo.gif)
 
