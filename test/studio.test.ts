@@ -64,6 +64,18 @@ describe('studio, used by someone starting from scratch', () => {
     assert.equal(await page.locator('#dl-gif').isVisible(), true, 'new scripts make a GIF by default');
   });
 
+  it('switches the frame to an iPhone and back', async () => {
+    await page.locator('#frame').selectOption('iphone');
+    await page.waitForFunction(() => document.querySelector('#save-state')?.textContent === 'Saved');
+    await page.waitForTimeout(500);
+    assert.match(readFileSync(scriptFile, 'utf8'), /device: iphone/);
+    await page.locator('#frame').selectOption('dark');
+    await page.waitForTimeout(800);
+    const yaml = readFileSync(scriptFile, 'utf8');
+    assert.doesNotMatch(yaml, /device:/);
+    assert.match(yaml, /window: dark/);
+  });
+
   it('refuses API calls without the secret token', async () => {
     const res = await page.request.get(new URL('/api/doc', studio.link).href);
     assert.equal(res.status(), 401);

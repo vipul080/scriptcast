@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0
+
+- **Phone demos**: `device: iphone` or `device: android` records your site's mobile layout inside a phone frame (status bar, Dynamic Island, home indicator) as a vertical 1080×1920 video. Taps show as a touch circle, and the camera zooms more gently on small screens.
+- **Window styles**: `output.window: dark` for a dark browser window, or `none` for just the page with rounded corners and a shadow.
+- The studio's **Look** section has a **Frame** menu for all of these.
+- Captions scale to fit narrow phone screens.
+
 ## 0.5.1
 
 - The studio explains the one-time browser download the first time you press **Record my clicks**, instead of just saying "Opening a browser window".

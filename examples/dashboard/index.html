@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pulse · Overview</title>
   <style>
     @font-face { font-family: Inter; font-weight: 400; src: url(../../fonts/Inter-Regular.ttf); }
@@ -71,6 +72,21 @@
     .toast { position: fixed; bottom: 28px; right: 28px; background: #12142b; color: #fff; padding: 14px 18px; border-radius: 12px; font-size: 14px; display: flex; gap: 10px; align-items: center; transform: translateY(120px); transition: transform .35s cubic-bezier(.2,.9,.3,1.2); }
     .toast.show { transform: none; }
     .toast b { width: 20px; height: 20px; border-radius: 50%; background: var(--green); display: grid; place-items: center; font-size: 12px; }
+    @media (max-width: 700px) {
+      aside { display: none; }
+      main { padding: 18px 16px 40px; }
+      header { margin-bottom: 18px; }
+      h1 { font-size: 24px; }
+      .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+      .card { padding: 14px; }
+      .kpi .value { font-size: 22px; }
+      svg { height: 150px; }
+      table th:nth-child(3), table td:nth-child(3) { display: none; }
+      .modal { width: calc(100% - 28px); padding: 20px; }
+      .segments { flex-wrap: wrap; }
+      .segments button { flex: 1 1 40%; }
+      .toast { left: 16px; right: 16px; bottom: 20px; }
+    }
   </style>
 </head>
 <body>

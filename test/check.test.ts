@@ -41,6 +41,10 @@ describe('scriptcast check', () => {
     await assert.rejects(check(script('  - click: Way down here')), /covered by another element \(\.cookie-banner\)\. Hide it by adding this to your script:  hide: \["\.cookie-banner"\]/);
   });
 
+  it('runs a script as a phone', async () => {
+    await check(script('  - type: { into: Email, text: a@b.co }\n  - click: { text: Save, in: Settings }', 'device: iphone\nhide: .cookie-banner'));
+  });
+
   it('hides elements listed under hide', async () => {
     await assert.rejects(check(script('  - click: Accept all', 'hide: .cookie-banner')), /couldn't find/);
   });

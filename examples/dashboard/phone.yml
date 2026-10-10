@@ -1,0 +1,20 @@
+# The same dashboard, recorded as an iPhone app.
+url: ./index.html
+device: iphone
+
+output:
+  file: phone.mp4
+  gif: true
+  gifFps: 12
+  gifColors: 96
+  background: sunset
+
+steps:
+  - say: Your numbers, in your pocket
+  - wait: 1s
+  - click: New report
+  - type: { into: Report name, text: Weekly users }
+  - click: Email me every Monday
+  - click: Create report
+  - say: Done in seconds
+  - wait: 2s

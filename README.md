@@ -22,7 +22,8 @@ Recording a product demo by hand is slow: you click through your app, flub a ste
 - ⌨️ **Natural typing**, letter by letter
 - 💬 **Captions** that explain each step (`say: Invite your team`)
 - 🖥️ **Studio app**: build demos with buttons, or just click around your site and let it write the steps
-- 🎨 **Beautiful framing**: a gradient background, browser window and soft shadow
+- 🎨 **Beautiful framing**: gradient backgrounds, a light or dark browser window, or no window at all
+- 📱 **Phone demos**: record your site as an iPhone or Android phone, as a vertical video
 - 🔁 **Always up to date**: a GitHub Action re-records your demo on every release
 
 ## Quick start
@@ -92,6 +93,25 @@ When several things match, scriptcast picks the best one:
 - click: { text: Save, nth: 2 }         # the second Save on the page
 ```
 
+### Looks
+
+```yaml
+output:
+  background: sunset   # aurora, sunset, ocean, candy, forest, midnight, mono, or any CSS color
+  window: dark         # light (default), dark, or none
+```
+
+Record as a phone with `device: iphone` (or `android`). scriptcast loads your site's mobile layout, puts it in a phone frame with a status bar, shows taps as a touch circle, and makes a vertical 1080×1920 video:
+
+```yaml
+url: http://localhost:3000
+device: iphone
+steps:
+  - click: New report
+```
+
+<p align="center"><img src="assets/phone.gif" alt="scriptcast phone demo" width="300"></p>
+
 ### Apps behind a login
 
 Put the login in `setup:`. It runs before recording starts, so it never shows up in the video:
@@ -137,6 +157,8 @@ steps:
 | `output.gifWidth` / `gifFps` / `gifColors` | `960` / `15` / `256` | GIF size, frame rate and palette. Lower them for a smaller file (e.g. `880` / `12` / `96` roughly halves it) |
 | `output.fps` | `30` | Frame rate |
 | `output.width` / `height` | `1920` / `1080` | Video size |
+| `output.window` | `light` | `light`, `dark` or `none` (browser window style) |
+| `device` | | `iphone` or `android` to record as a phone (vertical video) |
 | `output.background` | `aurora` | `aurora`, `sunset`, `ocean`, `candy`, `forest`, `midnight`, `mono`, or any CSS color |
 
 ### CLI
@@ -220,8 +242,8 @@ npm run demo   # renders examples/dashboard/demo.mp4
 - [x] Studio: visual editor with click recording
 - [ ] Desktop app (no terminal needed)
 - [x] GitHub Action that keeps demo videos up to date
-- [ ] Dark-mode window theme and custom window styles
-- [ ] Mobile viewports with device frames
+- [x] Dark window and frameless styles
+- [x] Mobile viewports with device frames
 - [ ] Record terminal sessions alongside the browser
 - [ ] Background music and fade in/out
 

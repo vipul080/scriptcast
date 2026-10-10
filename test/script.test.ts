@@ -72,6 +72,21 @@ steps:
     assert.throws(() => parse('url: x.com\nsetup: [{ clik: x }]\nsteps: [{ wait: 1s }]'), /setup step 1: unknown action/);
   });
 
+  it('records as a phone with device: iphone', () => {
+    const s = parse('url: x.com\ndevice: iphone\nsteps: [{ wait: 1s }]');
+    assert.equal(s.device?.name, 'iPhone');
+    assert.deepEqual(s.viewport, { width: 393, height: 798 });
+    assert.equal(s.output.window, 'phone');
+    assert.deepEqual([s.output.width, s.output.height], [1080, 1920], 'phone videos are portrait');
+    assert.throws(() => parse('url: x.com\ndevice: nokia\nsteps: [{ wait: 1s }]'), /Unknown device "nokia"/);
+  });
+
+  it('reads the window style', () => {
+    assert.equal(parse('url: x.com\nsteps: [{ wait: 1s }]').output.window, 'light');
+    assert.equal(parse('url: x.com\noutput: { window: dark }\nsteps: [{ wait: 1s }]').output.window, 'dark');
+    assert.throws(() => parse('url: x.com\noutput: { window: purple }\nsteps: [{ wait: 1s }]'), /output.window should be one of/);
+  });
+
   it('gives helpful errors', () => {
     assert.throws(() => parse('steps: []'), /needs a "url:"/);
     assert.throws(() => parse('url: x.com\nsteps: [{ clik: Save }]'), /unknown action "clik"/);

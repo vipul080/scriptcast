@@ -32,6 +32,8 @@ export function describe(step: Step): string {
 export interface RunOptions {
   // Skip animations and shorten pauses. Used by `scriptcast check`.
   fast?: boolean;
+  // Recording as a phone: gentler zoom.
+  mobile?: boolean;
   headed?: boolean;
   log?: (msg: string) => void;
 }
@@ -76,12 +78,14 @@ class Session {
   warnings = 0;
   cursor: Point;
   private fast: boolean;
+  private mobile: boolean;
   private log: (msg: string) => void;
   private applyHide: () => Promise<void>;
 
   constructor(private page: Page, private viewport: { width: number; height: number }, opts: SessionOptions) {
     this.cursor = { x: viewport.width * 0.55, y: viewport.height * 0.62 };
     this.fast = opts.fast ?? false;
+    this.mobile = opts.mobile ?? false;
     this.log = opts.log ?? (() => {});
     this.applyHide = opts.applyHide ?? (() => Promise.resolve());
   }
@@ -92,7 +96,9 @@ class Session {
 
   private zoomFor(rect: Rect): number {
     const { width, height } = this.viewport;
-    return clamp(Math.min((width * 0.45) / rect.width, (height * 0.45) / rect.height), 1.4, 2);
+    const ideal = Math.min((width * 0.45) / rect.width, (height * 0.45) / rect.height);
+    // Phone screens are already small, so zoom in gently there.
+    return this.mobile ? clamp(ideal, 1.15, 1.35) : clamp(ideal, 1.4, 2);
   }
 
   private async settle() {
@@ -280,7 +286,8 @@ async function withPage<T>(script: Script, opts: RunOptions, fn: (page: Page, se
     const savedSession = script.session && existsSync(script.session) ? script.session : undefined;
     const context = await browser.newContext({
       viewport: script.viewport,
-      deviceScaleFactor: DEVICE_SCALE,
+      deviceScaleFactor: script.device?.deviceScaleFactor ?? DEVICE_SCALE,
+      ...(script.device && { userAgent: script.device.userAgent, isMobile: true, hasTouch: true }),
       storageState: savedSession,
     });
     const page = await context.newPage();
@@ -303,7 +310,7 @@ async function withPage<T>(script: Script, opts: RunOptions, fn: (page: Page, se
       log(`  using saved session ${relative(process.cwd(), savedSession)} (delete it to run setup again)`);
     } else if (script.setup.length) {
       log('  setup (not recorded)');
-      const setup = new Session(page, script.viewport, { ...opts, fast: true, applyHide });
+      const setup = new Session(page, script.viewport, { ...opts, fast: true, applyHide, mobile: Boolean(script.device) });
       await runSteps(script.setup, setup, log, 'Setup step');
       if (script.session) {
         mkdirSync(dirname(script.session), { recursive: true });
@@ -314,7 +321,7 @@ async function withPage<T>(script: Script, opts: RunOptions, fn: (page: Page, se
       await open();
     }
 
-    const session = new Session(page, script.viewport, { ...opts, applyHide });
+    const session = new Session(page, script.viewport, { ...opts, applyHide, mobile: Boolean(script.device) });
     await page.mouse.move(session.cursor.x, session.cursor.y);
     try {
       return await fn(page, session);
@@ -363,8 +370,8 @@ export async function record(script: Script, opts: RunOptions = {}): Promise<Rec
     await cdp.send('Page.startScreencast', {
       format: 'jpeg',
       quality: 95,
-      maxWidth: script.viewport.width * DEVICE_SCALE,
-      maxHeight: script.viewport.height * DEVICE_SCALE,
+      maxWidth: Math.round(script.viewport.width * (script.device?.deviceScaleFactor ?? DEVICE_SCALE)),
+      maxHeight: Math.round(script.viewport.height * (script.device?.deviceScaleFactor ?? DEVICE_SCALE)),
     });
 
     const start = now();
@@ -376,6 +383,6 @@ export async function record(script: Script, opts: RunOptions = {}): Promise<Rec
 
     if (frames.length === 0) throw new Error('The browser did not produce any frames');
     frames.sort((a, b) => a.t - b.t);
-    return { frames, events: session.events, start, end, viewport: script.viewport, cursorStart };
+    return { frames, events: session.events, start, end, viewport: script.viewport, cursorStart, statusBar: script.device?.statusBar };
   });
 }

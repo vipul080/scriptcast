@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { devices } from 'playwright';
 import { parse } from 'yaml';
 
 // What to click/hover/type into. Written the way you'd describe it to a person.
@@ -33,12 +34,33 @@ export interface OutputOptions {
   width: number;
   height: number;
   background: string;
+  // How the page is framed: a light or dark browser window, no window, or a phone.
+  window: 'light' | 'dark' | 'none' | 'phone';
 }
+
+// A phone to emulate. scriptcast draws its own status bar, so the web page gets
+// the full screen height minus that bar (no browser address bar).
+export interface Device {
+  name: string;
+  viewport: { width: number; height: number };
+  deviceScaleFactor: number;
+  userAgent: string;
+  statusBar: number;
+}
+
+const DEVICES: Record<string, Device> = {
+  iphone: { name: 'iPhone', viewport: { width: 393, height: 798 }, deviceScaleFactor: 3, userAgent: devices['iPhone 15'].userAgent, statusBar: 54 },
+  android: { name: 'Android', viewport: { width: 412, height: 885 }, deviceScaleFactor: 2.625, userAgent: devices['Pixel 7'].userAgent, statusBar: 30 },
+};
+
+const WINDOWS = ['light', 'dark', 'none'] as const;
 
 export interface Script {
   url: string;
   displayUrl: string;
   viewport: { width: number; height: number };
+  // Set when recording as a phone (device: iphone / android).
+  device?: Device;
   // CSS selectors to hide while recording (cookie banners, chat widgets, ...).
   hide: string[];
   output: OutputOptions;
@@ -175,22 +197,33 @@ export function parseScript(source: string, baseDir: string, env: Record<string,
 
   const url = resolveUrl(doc.url, baseDir);
   const out = doc.output ?? {};
+  let device: Device | undefined;
+  if (doc.device !== undefined && doc.device !== 'desktop') {
+    device = DEVICES[String(doc.device).toLowerCase()];
+    if (!device) throw new ScriptError(`Unknown device "${doc.device}". Try: ${Object.keys(DEVICES).join(', ')}, or desktop`);
+  }
+  if (out.window !== undefined && !(WINDOWS as readonly string[]).includes(out.window)) {
+    throw new ScriptError(`output.window should be one of: ${WINDOWS.join(', ')}`);
+  }
   const hide = doc.hide === undefined ? [] : Array.isArray(doc.hide) ? doc.hide.map(String) : [String(doc.hide)];
   return {
     url,
     displayUrl: doc.displayUrl ?? defaultDisplayUrl(url),
-    viewport: { width: doc.viewport?.width ?? 1280, height: doc.viewport?.height ?? 800 },
+    viewport: device ? device.viewport : { width: doc.viewport?.width ?? 1280, height: doc.viewport?.height ?? 800 },
+    device,
     hide,
     output: {
       file: resolve(baseDir, out.file ?? 'demo.mp4'),
       gif: out.gif ?? false,
-      gifWidth: out.gifWidth ?? 960,
+      // Phone videos are portrait by default.
+      gifWidth: out.gifWidth ?? (device ? 480 : 960),
       gifFps: out.gifFps ?? 15,
       gifColors: Math.min(256, Math.max(8, out.gifColors ?? 256)),
       fps: out.fps ?? 30,
-      width: out.width ?? 1920,
-      height: out.height ?? 1080,
+      width: out.width ?? (device ? 1080 : 1920),
+      height: out.height ?? (device ? 1920 : 1080),
       background: out.background ?? 'aurora',
+      window: device ? 'phone' : (out.window ?? 'light'),
     },
     setup: doc.setup === undefined ? [] : (Array.isArray(doc.setup) ? doc.setup : []).map((s: unknown, i: number) => parseStep(s, i, baseDir, url, 'setup step')),
     session: typeof doc.session === 'string' ? resolve(baseDir, doc.session) : undefined,

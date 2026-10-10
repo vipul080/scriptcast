@@ -100,6 +100,14 @@ function buildDoc() {
   if ($('remember-login').checked && lists.setup.length) next.session = next.session ?? '.scriptcast/session.json';
   else delete next.session;
   next.output = { ...(doc.output ?? {}), gif: $('gif').checked };
+  const frame = $('frame').value;
+  if (frame === 'iphone' || frame === 'android') {
+    next.device = frame;
+    delete next.output.window;
+  } else {
+    delete next.device;
+    next.output.window = frame;
+  }
   for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
   return next;
 }
@@ -421,6 +429,7 @@ async function load() {
   $('url').value = doc.url ?? '';
   $('display-url').value = doc.displayUrl ?? '';
   $('gif').checked = Boolean(doc.output?.gif);
+  $('frame').value = doc.device && doc.device !== 'desktop' ? String(doc.device).toLowerCase() : (doc.output?.window ?? 'light');
   $('remember-login').checked = Boolean(doc.session);
   lists.steps = (doc.steps ?? []).map(fromRaw);
   lists.setup = (doc.setup ?? []).map(fromRaw);
@@ -434,7 +443,7 @@ async function load() {
   $('yaml').textContent = yaml.yaml;
 
   for (const id of ['url', 'display-url']) $(id).addEventListener('input', scheduleSave);
-  for (const id of ['gif', 'remember-login']) $(id).addEventListener('change', scheduleSave);
+  for (const id of ['gif', 'remember-login', 'frame']) $(id).addEventListener('change', scheduleSave);
 
   const events = new EventSource(`/api/events?token=${token}`);
   events.onmessage = (m) => onEvent(JSON.parse(m.data));

@@ -35,6 +35,8 @@ export interface Recording {
   end: number;
   viewport: { width: number; height: number };
   cursorStart: Point;
+  // Phone recordings: height of the status bar drawn above the page, in CSS pixels.
+  statusBar?: number;
 }
 
 export const easeInOut = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);

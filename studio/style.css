@@ -159,6 +159,7 @@ input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px va
 }
 .add-bar button:hover { border-color: var(--brand); color: var(--brand); }
 
+.frame-field { margin-bottom: 14px; max-width: 320px; }
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
 .swatch {
   width: 44px; height: 30px; border-radius: 8px; border: 2px solid transparent; cursor: pointer;
