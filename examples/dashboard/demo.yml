@@ -1,0 +1,26 @@
+url: ./index.html
+displayUrl: localhost:3000
+viewport: { width: 1280, height: 800 }
+
+output:
+  file: demo.mp4
+  gif: true
+  gifWidth: 880
+  gifFps: 12
+  gifColors: 96
+  background: aurora
+
+steps:
+  - say: Your metrics at a glance
+  - wait: 1s
+  - say: Create a report in seconds
+  - click: New report
+  - type: { into: Report name, text: Weekly active users }
+  - click: { text: Active users, in: Metric }
+  - click: Email me every Monday
+  - click: Create report
+  - say: It's live right away
+  - wait: 2s
+  - hover: Weekly active users
+  - say: ""
+  - wait: 800ms

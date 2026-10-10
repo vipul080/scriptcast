@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New hero example: an analytics dashboard with a modal, captions and a live-updating table (`examples/dashboard`).
+- `output.gifWidth`, `output.gifFps` and `output.gifColors` to trade GIF quality for file size.
+
 ## 0.3.0
 
 - **GitHub Action**: `uses: vipul080/scriptcast@v0` records your demo in CI, can start your app and wait for it, and can commit the fresh video/GIF back to your repo. scriptcast's own README demo is now generated this way.

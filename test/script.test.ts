@@ -49,6 +49,13 @@ steps:
     assert.deepEqual(parse('url: x.com\nhide: [.a, "#b"]\nsteps: [{ wait: 1s }]').hide, ['.a', '#b']);
   });
 
+  it('reads GIF options with sensible defaults', () => {
+    const defaults = parse('url: x.com\nsteps: [{ wait: 1s }]').output;
+    assert.deepEqual([defaults.gifWidth, defaults.gifFps, defaults.gifColors], [960, 15, 256]);
+    const custom = parse('url: x.com\noutput: { gifWidth: 800, gifFps: 12, gifColors: 4000 }\nsteps: [{ wait: 1s }]').output;
+    assert.deepEqual([custom.gifWidth, custom.gifFps, custom.gifColors], [800, 12, 256], 'colors are capped at 256');
+  });
+
   it('gives helpful errors', () => {
     assert.throws(() => parse('steps: []'), /needs a "url:"/);
     assert.throws(() => parse('url: x.com\nsteps: [{ clik: Save }]'), /unknown action "clik"/);

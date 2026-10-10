@@ -78,7 +78,7 @@ program
 
     if (script.output.gif) {
       const gif = script.output.file.replace(/\.[^.]+$/, '') + '.gif';
-      await toGif(script.output.file, gif);
+      await toGif(script.output.file, gif, { width: script.output.gifWidth, fps: script.output.gifFps, colors: script.output.gifColors });
       console.log(`✔ ${gif}`);
       outputs.gif = gif;
     }

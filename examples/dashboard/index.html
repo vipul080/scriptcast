@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pulse · Overview</title>
+  <style>
+    @font-face { font-family: Inter; font-weight: 400; src: url(../../fonts/Inter-Regular.ttf); }
+    @font-face { font-family: Inter; font-weight: 600; src: url(../../fonts/Inter-SemiBold.ttf); }
+    :root {
+      --bg: #f6f7fb; --card: #fff; --line: #eceef4; --text: #171a2c; --muted: #7c8199;
+      --brand: #5b5bf0; --brand-soft: #eeeefe; --green: #12a150; --red: #e5484d;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+    aside { width: 220px; background: #12142b; color: #c9cbe0; padding: 22px 14px; flex-shrink: 0; }
+    .logo { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; font-size: 18px; padding: 0 10px 26px; }
+    .logo i { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #7c7cff, #4fd1c5); display: block; }
+    nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; color: inherit; text-decoration: none; font-size: 14px; margin-bottom: 2px; }
+    nav a.active { background: rgba(255,255,255,.08); color: #fff; }
+    nav a span { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid currentColor; opacity: .7; }
+    main { flex: 1; padding: 26px 34px 60px; min-width: 0; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .btn { font: inherit; font-size: 14px; font-weight: 600; border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer; background: var(--brand); color: #fff; transition: background .15s, transform .1s; }
+    .btn:hover { background: #4646d8; }
+    .btn:active { transform: scale(.97); }
+    .btn.ghost { background: #fff; color: var(--text); border: 1px solid var(--line); }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+    .kpi .label { color: var(--muted); font-size: 13px; }
+    .kpi .value { font-size: 26px; font-weight: 600; margin: 8px 0 6px; letter-spacing: -0.02em; }
+    .delta { font-size: 12.5px; font-weight: 600; color: var(--green); }
+    .delta.down { color: var(--red); }
+    .chart-card { margin-bottom: 16px; }
+    .chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .chart-head h2, .table-card h2 { font-size: 16px; margin: 0; }
+    .legend { color: var(--muted); font-size: 13px; }
+    svg { display: block; width: 100%; height: 220px; }
+    .line { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: draw 1.6s ease-out .3s forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+    th { text-align: left; color: var(--muted); font-weight: 400; font-size: 13px; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+    td { padding: 13px 8px; border-bottom: 1px solid var(--line); }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr { transition: background .15s; }
+    tbody tr:hover { background: #fafaff; }
+    tr.new { animation: flash 2.4s ease-out; }
+    @keyframes flash { 0%, 40% { background: var(--brand-soft); } 100% { background: transparent; } }
+    .pill { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: #e8f7ee; color: var(--green); }
+    .pill.draft { background: #f1f2f6; color: var(--muted); }
+    .overlay { position: fixed; inset: 0; background: rgba(18,20,43,.35); display: none; align-items: center; justify-content: center; }
+    .overlay.open { display: flex; animation: fade .2s ease-out; }
+    @keyframes fade { from { opacity: 0; } }
+    .modal { width: 440px; background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 30px 80px rgba(18,20,43,.25); animation: rise .25s ease-out; }
+    @keyframes rise { from { transform: translateY(12px) scale(.98); opacity: 0; } }
+    .modal h3 { margin: 0 0 4px; font-size: 18px; }
+    .modal .sub { margin-bottom: 18px; }
+    label.field { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+    input[type=text] { width: 100%; font: inherit; font-size: 15px; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: 10px; outline: none; margin-bottom: 18px; }
+    input[type=text]:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(91,91,240,.14); }
+    .segments { display: flex; gap: 8px; margin-bottom: 18px; }
+    .segments button { flex: 1; font: inherit; font-size: 14px; padding: 10px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; }
+    .segments button.on { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+    .toggle { display: flex; align-items: center; gap: 12px; font-size: 14px; cursor: pointer; margin-bottom: 22px; user-select: none; }
+    .switch { width: 38px; height: 22px; border-radius: 99px; background: #d9dbe6; position: relative; transition: background .2s; flex-shrink: 0; }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .toggle.on .switch { background: var(--brand); }
+    .toggle.on .switch::after { transform: translateX(16px); }
+    .actions { display: flex; justify-content: flex-end; gap: 10px; }
+    .toast { position: fixed; bottom: 28px; right: 28px; background: #12142b; color: #fff; padding: 14px 18px; border-radius: 12px; font-size: 14px; display: flex; gap: 10px; align-items: center; transform: translateY(120px); transition: transform .35s cubic-bezier(.2,.9,.3,1.2); }
+    .toast.show { transform: none; }
+    .toast b { width: 20px; height: 20px; border-radius: 50%; background: var(--green); display: grid; place-items: center; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="logo"><i></i>Pulse</div>
+    <nav>
+      <a class="active" href="#"><span></span>Overview</a>
+      <a href="#"><span></span>Reports</a>
+      <a href="#"><span></span>Customers</a>
+      <a href="#"><span></span>Integrations</a>
+      <a href="#"><span></span>Settings</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <h1>Overview</h1>
+        <div class="sub">Last 30 days · updated just now</div>
+      </div>
+      <button class="btn" id="open">New report</button>
+    </header>
+
+    <section class="kpis">
+      <div class="card kpi"><div class="label">Revenue</div><div class="value" data-count="48290" data-prefix="$">$0</div><div class="delta">▲ 12.4% vs last month</div></div>
+      <div class="card kpi"><div class="label">Active users</div><div class="value" data-count="3912">0</div><div class="delta">▲ 8.1% vs last month</div></div>
+      <div class="card kpi"><div class="label">Conversion</div><div class="value" data-count="4.8" data-suffix="%">0%</div><div class="delta">▲ 0.6 pts</div></div>
+      <div class="card kpi"><div class="label">Churn</div><div class="value" data-count="1.2" data-suffix="%">0%</div><div class="delta down">▼ 0.3 pts</div></div>
+    </section>
+
+    <section class="card chart-card">
+      <div class="chart-head"><h2>Revenue over time</h2><div class="legend">Daily · USD</div></div>
+      <svg viewBox="0 0 1000 220" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5b5bf0" stop-opacity=".22"/>
+            <stop offset="1" stop-color="#5b5bf0" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <g stroke="#eceef4" stroke-width="1">
+          <line x1="0" y1="55" x2="1000" y2="55"/><line x1="0" y1="110" x2="1000" y2="110"/><line x1="0" y1="165" x2="1000" y2="165"/>
+        </g>
+        <path d="M0,170 C60,160 100,150 160,140 S260,150 320,120 S430,95 480,105 S580,80 640,70 S760,85 820,55 S930,40 1000,30 L1000,220 L0,220 Z" fill="url(#fill)"/>
+        <path class="line" d="M0,170 C60,160 100,150 160,140 S260,150 320,120 S430,95 480,105 S580,80 640,70 S760,85 820,55 S930,40 1000,30" fill="none" stroke="#5b5bf0" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </section>
+
+    <section class="card table-card">
+      <h2>Reports</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Metric</th><th>Schedule</th><th>Status</th></tr></thead>
+        <tbody id="rows">
+          <tr><td>Monthly board update</td><td>Revenue</td><td>1st of the month</td><td><span class="pill">Active</span></td></tr>
+          <tr><td>Signup funnel</td><td>Conversion</td><td>Daily</td><td><span class="pill">Active</span></td></tr>
+          <tr><td>Retention deep dive</td><td>Churn</td><td>Not scheduled</td><td><span class="pill draft">Draft</span></td></tr>
+          <tr><td>Product usage</td><td>Active users</td><td>Weekly</td><td><span class="pill">Active</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog" aria-label="New report">
+      <h3>New report</h3>
+      <div class="sub">Pick a metric and we'll keep it up to date for you.</div>
+      <label class="field" for="name">Report name</label>
+      <input type="text" id="name" placeholder="e.g. Weekly revenue" autocomplete="off">
+      <label class="field">Metric</label>
+      <div class="segments" id="metric">
+        <button type="button" class="on">Revenue</button>
+        <button type="button">Active users</button>
+        <button type="button">Conversion</button>
+      </div>
+      <div class="toggle" id="schedule" role="switch" aria-checked="false" tabindex="0"><div class="switch"></div>Email me every Monday</div>
+      <div class="actions">
+        <button class="btn ghost" id="cancel">Cancel</button>
+        <button class="btn" id="create">Create report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><b>✓</b><span>Report created</span></div>
+
+  <script>
+    // Count KPI numbers up on load.
+    for (const el of document.querySelectorAll('[data-count]')) {
+      const target = Number(el.dataset.count), decimals = String(target).includes('.') ? 1 : 0;
+      const start = performance.now();
+      const tick = (now) => {
+        const k = Math.min(1, (now - start) / 1400), v = target * (1 - Math.pow(1 - k, 3));
+        el.textContent = (el.dataset.prefix || '') + v.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + (el.dataset.suffix || '');
+        if (k < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    const overlay = document.getElementById('overlay');
+    const name = document.getElementById('name');
+    const schedule = document.getElementById('schedule');
+    let metric = 'Revenue';
+
+    document.getElementById('open').onclick = () => { overlay.classList.add('open'); };
+    document.getElementById('cancel').onclick = () => overlay.classList.remove('open');
+    for (const b of document.querySelectorAll('#metric button')) {
+      b.onclick = () => {
+        document.querySelectorAll('#metric button').forEach((x) => x.classList.remove('on'));
+        b.classList.add('on');
+        metric = b.textContent;
+      };
+    }
+    schedule.onclick = () => {
+      const on = schedule.classList.toggle('on');
+      schedule.setAttribute('aria-checked', String(on));
+    };
+    document.getElementById('create').onclick = () => {
+      const row = document.createElement('tr');
+      row.className = 'new';
+      row.innerHTML = '<td></td><td></td><td></td><td><span class="pill">Active</span></td>';
+      row.cells[0].textContent = name.value || 'Untitled report';
+      row.cells[1].textContent = metric;
+      row.cells[2].textContent = schedule.classList.contains('on') ? 'Every Monday' : 'Not scheduled';
+      document.getElementById('rows').prepend(row);
+      overlay.classList.remove('open');
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
+    };
+  </script>
+</body>
+</html>

@@ -7,7 +7,7 @@ Re-run it whenever your UI changes or let GitHub Actions do it for you.
 
 ![scriptcast demo](assets/demo.gif)
 
-<sub>☝️ Made by scriptcast from a [10-line script](examples/todo/demo.yml), and re-recorded automatically by its own GitHub Action. No screen recorder, no editing.</sub>
+<sub>☝️ Made by scriptcast from [this short script](examples/dashboard/demo.yml), and re-recorded automatically by its own GitHub Action. No screen recorder, no editing.</sub>
 
 </div>
 
@@ -99,6 +99,7 @@ When several things match, scriptcast picks the best one:
 | `hide` | `[]` | CSS selectors to hide while recording (cookie banners, chat widgets) |
 | `output.file` | `demo.mp4` | Where to write the video |
 | `output.gif` | `false` | Also write a GIF (great for READMEs) |
+| `output.gifWidth` / `gifFps` / `gifColors` | `960` / `15` / `256` | GIF size, frame rate and palette. Lower them for a smaller file (e.g. `880` / `12` / `96` roughly halves it) |
 | `output.fps` | `30` | Frame rate |
 | `output.width` / `height` | `1920` / `1080` | Video size |
 | `output.background` | `aurora` | `aurora`, `sunset`, `ocean`, `candy`, `forest`, `midnight`, `mono`, or any CSS color |
@@ -163,7 +164,7 @@ Outputs: `video` and `gif` (file paths), handy for uploading as an artifact or a
 ```bash
 git clone https://github.com/vipul080/scriptcast && cd scriptcast
 npm install
-npm run demo   # renders examples/todo/demo.mp4
+npm run demo   # renders examples/dashboard/demo.mp4
 ```
 
 ## How it works

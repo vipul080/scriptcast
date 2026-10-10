@@ -344,13 +344,13 @@ export async function render(
   onProgress(1);
 }
 
-export async function toGif(mp4: string, gif: string) {
+export async function toGif(mp4: string, gif: string, opts: { width: number; fps: number; colors: number }) {
   const ffmpeg = ffmpegPath();
   const proc = spawn(
     ffmpeg,
     [
       '-y', '-loglevel', 'error', '-i', mp4,
-      '-vf', 'fps=15,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5',
+      '-vf', `fps=${opts.fps},scale=${opts.width}:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff:max_colors=${opts.colors}[p];[b][p]paletteuse=dither=bayer:bayer_scale=5`,
       gif,
     ],
     { stdio: ['ignore', 'inherit', 'inherit'] },

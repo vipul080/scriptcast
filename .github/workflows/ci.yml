@@ -23,7 +23,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: demo-video
-          path: examples/todo/demo.mp4
+          path: examples/dashboard/demo.mp4
 
   action:
     runs-on: ubuntu-latest

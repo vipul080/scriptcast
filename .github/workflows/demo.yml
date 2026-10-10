@@ -18,7 +18,7 @@ jobs:
           ref: main
       - uses: ./
         with:
-          script: examples/todo/demo.yml
+          script: examples/dashboard/demo.yml
           args: --gif -o assets/demo.mp4
           commit: true
           commit-message: Update README demo

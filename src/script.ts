@@ -26,6 +26,9 @@ export type Step =
 export interface OutputOptions {
   file: string;
   gif: boolean;
+  gifWidth: number;
+  gifFps: number;
+  gifColors: number;
   fps: number;
   width: number;
   height: number;
@@ -155,6 +158,9 @@ export function parseScript(source: string, baseDir: string): Script {
     output: {
       file: resolve(baseDir, out.file ?? 'demo.mp4'),
       gif: out.gif ?? false,
+      gifWidth: out.gifWidth ?? 960,
+      gifFps: out.gifFps ?? 15,
+      gifColors: Math.min(256, Math.max(8, out.gifColors ?? 256)),
       fps: out.fps ?? 30,
       width: out.width ?? 1920,
       height: out.height ?? 1080,

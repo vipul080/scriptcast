@@ -13,10 +13,11 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
-    "demo": "tsx src/cli.ts record examples/todo/demo.yml",
+    "demo": "tsx src/cli.ts record examples/dashboard/demo.yml",
     "test": "tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run typecheck && npm run build"
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "demo:todo": "tsx src/cli.ts record examples/todo/demo.yml"
   },
   "keywords": [
     "demo",
