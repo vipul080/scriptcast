@@ -168,9 +168,9 @@ npm run demo   # renders examples/todo/demo.mp4
 
 ## How it works
 
-1. **Record** — Playwright drives Chromium through your steps while the page is captured frame-by-frame at 2× resolution. Every cursor move, click and keystroke is logged on a timeline.
-2. **Direct** — a virtual camera reads the timeline and decides where to look: it zooms toward whatever is being clicked or typed into and eases back out when things go quiet, using spring physics so motion never feels robotic.
-3. **Render** — each output frame is composited (background, window, zoomed page, cursor, click effects) and streamed into ffmpeg.
+1. **Record**: Playwright drives Chromium through your steps while the page is captured frame-by-frame at 2× resolution. Every cursor move, click and keystroke is logged on a timeline.
+2. **Direct**: a virtual camera reads the timeline and decides where to look: it zooms toward whatever is being clicked or typed into and eases back out when things go quiet, using spring physics so motion never feels robotic.
+3. **Render**: each output frame is composited (background, window, zoomed page, cursor, click effects) and streamed into ffmpeg.
 
 ## Roadmap
 
@@ -183,7 +183,7 @@ npm run demo   # renders examples/todo/demo.mp4
 - [ ] Record terminal sessions alongside the browser
 - [ ] Background music and fade in/out
 
-Have an idea? [Open an issue](../../issues) — feature requests are very welcome.
+Have an idea? [Open an issue](../../issues). Feature requests are very welcome.
 
 ## Contributing
 
