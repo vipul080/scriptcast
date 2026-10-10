@@ -36,6 +36,8 @@ export interface OutputOptions {
   background: string;
   // How the page is framed: a light or dark browser window, no window, or a phone.
   window: 'light' | 'dark' | 'none' | 'phone';
+  // Fade in at the start and out at the end.
+  fade: boolean;
 }
 
 // A phone to emulate. scriptcast draws its own status bar, so the web page gets
@@ -224,6 +226,7 @@ export function parseScript(source: string, baseDir: string, env: Record<string,
       height: out.height ?? (device ? 1920 : 1080),
       background: out.background ?? 'aurora',
       window: device ? 'phone' : (out.window ?? 'light'),
+      fade: out.fade ?? true,
     },
     setup: doc.setup === undefined ? [] : (Array.isArray(doc.setup) ? doc.setup : []).map((s: unknown, i: number) => parseStep(s, i, baseDir, url, 'setup step')),
     session: typeof doc.session === 'string' ? resolve(baseDir, doc.session) : undefined,

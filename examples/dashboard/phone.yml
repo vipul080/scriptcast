@@ -5,6 +5,7 @@ device: iphone
 output:
   file: phone.mp4
   gif: true
+  gifWidth: 400
   gifFps: 12
   gifColors: 96
   background: sunset

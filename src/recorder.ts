@@ -2,10 +2,10 @@ import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { chromium, type Browser, type Page } from 'playwright';
+import { chromium, type Browser, type Locator, type Page } from 'playwright';
 import { find, NotFound, type Match } from './locate.js';
 import { describeTarget, type Script, type Step, type Target } from './script.js';
-import { clamp, easeInOut, type Frame, type Point, type Recording, type Rect, type TimelineEvent } from './timeline.js';
+import { clamp, easeInOut, pathPoint, type Frame, type Point, type Recording, type Rect, type TimelineEvent } from './timeline.js';
 
 const DEVICE_SCALE = 2;
 const FIND_TIMEOUT = 10_000;
@@ -107,7 +107,7 @@ class Session {
     await this.applyHide();
   }
 
-  private async find(target: Target, timeout = FIND_TIMEOUT, interact = true): Promise<{ rect: Rect; center: Point }> {
+  private async find(target: Target, timeout = FIND_TIMEOUT, interact = true): Promise<{ rect: Rect; center: Point; locator: Locator }> {
     // Pages that re-render (React, SPAs) can swap the element out right after we
     // find it, so look it up again a few times before giving up.
     let match: Match | undefined;
@@ -147,7 +147,7 @@ class Session {
         );
       }
     }
-    return { rect, center };
+    return { rect, center, locator: loc };
   }
 
   private async waitForScrollToStop() {
@@ -175,8 +175,8 @@ class Session {
     const dur = clamp(0.35 + dist * 0.0007, 0.45, 1.0);
     for (;;) {
       const k = Math.min(1, (now() - t0) / dur);
-      const e = easeInOut(k);
-      await this.page.mouse.move(from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e);
+      const p = pathPoint(from, to, easeInOut(k));
+      await this.page.mouse.move(p.x, p.y);
       if (k >= 1) break;
       await sleep(12);
     }
@@ -187,7 +187,7 @@ class Session {
   }
 
   private async clickTarget(target: Target) {
-    const { rect, center } = await this.find(target);
+    const { rect, center, locator } = await this.find(target);
     const { t0 } = await this.moveTo(center);
     await this.pause(140);
     const tClick = now();
@@ -195,7 +195,9 @@ class Session {
     await this.pause(90);
     await this.page.mouse.up();
     this.events.push({ kind: 'click', t: tClick, at: center });
-    this.events.push({ kind: 'focus', t0, t1: now(), rect, zoom: this.zoomFor(rect) });
+    const focus = { kind: 'focus' as const, t0, t1: now(), rect, zoom: this.zoomFor(rect), fleeting: false };
+    this.events.push(focus);
+    return { focus, locator };
   }
 
   async run(step: Step) {
@@ -207,11 +209,15 @@ class Session {
         await this.settle();
         await this.pause(700);
         break;
-      case 'click':
-        await this.clickTarget(step.target);
+      case 'click': {
+        const { focus, locator } = await this.clickTarget(step.target);
         await this.settle();
+        // If the click made its target go away (a modal closed, a menu collapsed),
+        // the camera should pull back and show the result instead of the empty spot.
+        focus.fleeting = !(await locator.isVisible().catch(() => false));
         await this.pause(550);
         break;
+      }
       case 'hover': {
         const { rect, center } = await this.find(step.target);
         const { t0 } = await this.moveTo(center);

@@ -7,6 +7,8 @@ Re-run it whenever your UI changes or let GitHub Actions do it for you.
 
 ![scriptcast demo](assets/demo.gif)
 
+**[Website](https://vipul080.github.io/scriptcast/)** · **[npm](https://www.npmjs.com/package/scriptcast)** · **[Changelog](CHANGELOG.md)**
+
 <sub>☝️ Made by scriptcast from [this short script](examples/dashboard/demo.yml), and re-recorded automatically by its own GitHub Action. No screen recorder, no editing.</sub>
 
 </div>
@@ -156,6 +158,7 @@ steps:
 | `output.gif` | `false` | Also write a GIF (great for READMEs) |
 | `output.gifWidth` / `gifFps` / `gifColors` | `960` / `15` / `256` | GIF size, frame rate and palette. Lower them for a smaller file (e.g. `880` / `12` / `96` roughly halves it) |
 | `output.fps` | `30` | Frame rate |
+| `output.fade` | `true` | Fade in at the start and out at the end (smooth GIF loops) |
 | `output.width` / `height` | `1920` / `1080` | Video size |
 | `output.window` | `light` | `light`, `dark` or `none` (browser window style) |
 | `device` | | `iphone` or `android` to record as a phone (vertical video) |

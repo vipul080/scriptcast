@@ -10,26 +10,60 @@ export interface Camera {
 // How long before an action the camera starts moving in, and how long it lingers after.
 const LEAD = 0.25;
 const HOLD = 1.6;
+// After clicking something that then disappeared (a modal's submit button, a menu
+// item), zoom out quickly so viewers see what the click did.
+const FLEETING_HOLD = 0.45;
 // Spring stiffness: higher settles faster. Critically damped, so no wobble.
 const STIFFNESS = 38;
 
-function targetAt(rec: Recording, t: number): Camera {
-  const { width, height } = rec.viewport;
-  const overview: Camera = { zoom: 1, cx: width / 2, cy: height / 2 };
-  const cuts = rec.events.filter((e) => e.kind === 'cut').map((e) => e.t);
+interface Shot {
+  t0: number;
+  until: number;
+  zoom: number;
+  cx: number;
+  cy: number;
+}
 
-  let best: Camera | null = null;
-  let bestStart = -Infinity;
-  for (const e of rec.events) {
-    if (e.kind !== 'focus') continue;
-    const nextCut = cuts.find((c) => c > e.t1) ?? Infinity;
-    const until = Math.min(e.t1 + HOLD, nextCut);
-    if (t >= e.t0 - LEAD && t <= until && e.t0 > bestStart) {
-      bestStart = e.t0;
-      best = { zoom: e.zoom, cx: e.rect.x + e.rect.width / 2, cy: e.rect.y + e.rect.height / 2 };
-    }
+// Turn focus events into camera shots. Actions that follow each other closely
+// form one "scene" that shares a single zoom level, so the camera pans between
+// them instead of pumping in and out on every step.
+export function planShots(rec: Recording): Shot[] {
+  const cuts = rec.events.filter((e) => e.kind === 'cut').map((e) => e.t);
+  const shots: Shot[] = rec.events
+    .filter((e) => e.kind === 'focus')
+    .sort((a, b) => a.t0 - b.t0)
+    .map((e) => {
+      const nextCut = cuts.find((c) => c > e.t1) ?? Infinity;
+      return {
+        t0: e.t0,
+        until: Math.min(e.t1 + (e.fleeting ? FLEETING_HOLD : HOLD), nextCut),
+        zoom: e.zoom,
+        cx: e.rect.x + e.rect.width / 2,
+        cy: e.rect.y + e.rect.height / 2,
+      };
+    });
+
+  let scene: Shot[] = [];
+  const closeScene = () => {
+    const zoom = Math.min(...scene.map((s) => s.zoom));
+    for (const s of scene) s.zoom = zoom;
+    scene = [];
+  };
+  for (const shot of shots) {
+    const prev = scene[scene.length - 1];
+    if (prev && shot.t0 - LEAD > prev.until) closeScene();
+    scene.push(shot);
   }
-  return best ?? overview;
+  if (scene.length) closeScene();
+  return shots;
+}
+
+function targetAt(shots: Shot[], viewport: { width: number; height: number }, t: number): Camera {
+  let best: Shot | null = null;
+  for (const s of shots) {
+    if (t >= s.t0 - LEAD && t <= s.until && (!best || s.t0 > best.t0)) best = s;
+  }
+  return best ?? { zoom: 1, cx: viewport.width / 2, cy: viewport.height / 2 };
 }
 
 export function clampToViewport(cam: Camera, viewport: { width: number; height: number }): Camera {
@@ -46,13 +80,13 @@ export function clampToViewport(cam: Camera, viewport: { width: number; height: 
 export function trackCamera(rec: Recording, fps: number, frameCount: number): Camera[] {
   const dt = 1 / fps;
   const damping = 2 * Math.sqrt(STIFFNESS);
-  const first = targetAt(rec, rec.start);
-  const pos = { ...first };
+  const shots = planShots(rec);
+  const pos = { ...targetAt(shots, rec.viewport, rec.start) };
   const vel = { zoom: 0, cx: 0, cy: 0 };
   const out: Camera[] = [];
 
   for (let i = 0; i < frameCount; i++) {
-    const target = clampToViewport(targetAt(rec, rec.start + i * dt), rec.viewport);
+    const target = clampToViewport(targetAt(shots, rec.viewport, rec.start + i * dt), rec.viewport);
     for (const k of ['zoom', 'cx', 'cy'] as const) {
       const accel = STIFFNESS * (target[k] - pos[k]) - damping * vel[k];
       vel[k] += accel * dt;

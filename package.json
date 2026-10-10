@@ -1,6 +1,6 @@
 {
   "name": "scriptcast",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Write a script, get a polished demo video of your web app. Re-run it whenever your UI changes.",
   "type": "module",
   "bin": {
@@ -45,5 +45,6 @@
     "@types/node": "^26.6.4",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
-  }
+  },
+  "homepage": "https://vipul080.github.io/scriptcast/"
 }

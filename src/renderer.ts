@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createCanvas, GlobalFonts, loadImage, type Canvas, type Image, type SKRSContext2D } from '@napi-rs/canvas';
 import { trackCamera, type Camera } from './camera.js';
 import type { OutputOptions } from './script.js';
-import { cursorAt, easeOut, type Recording } from './timeline.js';
+import { clamp, cursorAt, easeOut, type Recording } from './timeline.js';
 
 // Ship our own font so videos look the same everywhere. Linux CI machines
 // often have no nice sans-serif font, and text would fall back to a serif one.
@@ -191,8 +191,8 @@ function drawPhone(ctx: SKRSContext2D, layout: Layout) {
   ctx.fill();
 }
 
-// Everything that never changes between frames: background, shadow, window or phone frame.
-function drawBackdrop(out: OutputOptions, layout: Layout, displayUrl: string): Canvas {
+// The static background behind everything.
+function drawBackground(out: OutputOptions): Canvas {
   const canvas = createCanvas(out.width, out.height);
   const ctx = canvas.getContext('2d');
 
@@ -205,7 +205,13 @@ function drawBackdrop(out: OutputOptions, layout: Layout, displayUrl: string): C
     ctx.fillStyle = g;
   }
   ctx.fillRect(0, 0, out.width, out.height);
+  return canvas;
+}
 
+// The window or phone frame with its shadow, on a transparent canvas so it can fade in and out.
+function drawFrame(out: OutputOptions, layout: Layout, displayUrl: string): Canvas {
+  const canvas = createCanvas(out.width, out.height);
+  const ctx = canvas.getContext('2d');
   const { win, radius } = layout;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
@@ -411,7 +417,8 @@ export async function render(
   onProgress: (fraction: number) => void = () => {},
 ) {
   const layout = computeLayout(out, rec.viewport, rec.statusBar);
-  const backdrop = drawBackdrop(out, layout, displayUrl);
+  const background = drawBackground(out);
+  const frame = drawFrame(out, layout, displayUrl);
   const canvas = createCanvas(out.width, out.height);
   const ctx = canvas.getContext('2d');
   // 'medium' (mipmapped bilinear) looks the same as 'high' here and is about 10x faster.
@@ -444,8 +451,20 @@ export async function render(
       y: page.y + ((y - viewY) / viewH) * page.h,
     });
 
-    ctx.drawImage(backdrop, 0, 0);
+    ctx.drawImage(background, 0, 0);
     ctx.save();
+    // Fade and grow in at the start, and the reverse at the end, so GIFs loop smoothly.
+    if (out.fade) {
+      const appear = easeOut(clamp(Math.min((t - rec.start) / 0.5, (rec.end - t) / 0.45), 0, 1));
+      if (appear < 1) {
+        const scale = 0.96 + 0.04 * appear;
+        ctx.globalAlpha = appear;
+        ctx.translate(out.width / 2, out.height / 2);
+        ctx.scale(scale, scale);
+        ctx.translate(-out.width / 2, -out.height / 2);
+      }
+    }
+    ctx.drawImage(frame, 0, 0);
     ctx.beginPath();
     ctx.roundRect(page.x, page.y, page.w, page.h, layout.pageRadius);
     ctx.clip();

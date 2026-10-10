@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>scriptcast · polished demo videos of your web app</title>
+  <meta name="description" content="Write a short script (or just click around your site) and get a polished demo video with auto-zoom, a smooth cursor and captions. Free and open source.">
+  <meta property="og:title" content="scriptcast">
+  <meta property="og:description" content="Polished demo videos of your web app, from a short script. Free and open source.">
+  <meta property="og:image" content="https://vipul080.github.io/scriptcast/assets/studio.png">
+  <style>
+    @font-face { font-family: Inter; font-weight: 400; src: url(fonts/Inter-Regular.ttf); }
+    @font-face { font-family: Inter; font-weight: 600; src: url(fonts/Inter-SemiBold.ttf); }
+    :root {
+      --bg: #fbfbfe; --text: #14162b; --muted: #676d88; --line: #e7e8f2; --card: #fff;
+      --brand: #5b5bf0; --brand-soft: #eeeefe; --code: #14162b; --code-text: #e6e7f5;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0d0e1c; --text: #ecedf7; --muted: #9a9fbd; --line: #23253d; --card: #15172b; --brand-soft: #22244a; --code: #090a16; color-scheme: dark; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 17px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+    a { color: var(--brand); }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; color: var(--text); text-decoration: none; }
+    .logo { width: 24px; height: 24px; border-radius: 8px; background: linear-gradient(135deg, #7c7cff, #4fd1c5); }
+    nav .links { display: flex; gap: 22px; font-size: 15px; }
+    nav .links a { color: var(--muted); text-decoration: none; }
+    nav .links a:hover { color: var(--text); }
+
+    .hero { text-align: center; padding: 56px 0 28px; }
+    h1 { font-size: clamp(36px, 6vw, 60px); line-height: 1.08; letter-spacing: -0.035em; margin: 0 0 18px; }
+    h1 span { background: linear-gradient(90deg, #6d6dfa, #3fb6c6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lead { font-size: 20px; color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
+    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cmd {
+      display: inline-flex; align-items: center; gap: 12px; font: 15px ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--code); color: var(--code-text); padding: 13px 18px; border-radius: 12px; border: 0; cursor: pointer;
+    }
+    .cmd b { color: #8f8fff; font-weight: 400; }
+    .cmd small { font: 12px Inter, sans-serif; color: #9a9fbd; }
+    .btn { display: inline-flex; align-items: center; padding: 13px 20px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid var(--line); color: var(--text); background: var(--card); }
+    .btn:hover { border-color: var(--brand); }
+    .demo { margin: 44px auto 0; border-radius: 18px; overflow: hidden; box-shadow: 0 30px 80px rgba(40, 40, 120, 0.18); background: #000; aspect-ratio: 16 / 9; }
+    .demo video { width: 100%; height: 100%; display: block; }
+    .caption { text-align: center; color: var(--muted); font-size: 14px; margin-top: 14px; }
+
+    section { padding: 72px 0 0; }
+    h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -0.025em; margin: 0 0 12px; }
+    .sub { color: var(--muted); max-width: 620px; margin: 0 0 30px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+    .card h3 { margin: 10px 0 6px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+    .icon { font-size: 26px; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
+    pre { margin: 0; background: var(--code); color: var(--code-text); border-radius: 14px; padding: 20px 22px; font: 14.5px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto; }
+    pre .k { color: #8f8fff; }
+    pre .s { color: #7fd8c5; }
+    pre .c { color: #6b7091; }
+    .shot { width: 100%; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 20px 60px rgba(40, 40, 120, 0.12); display: block; }
+    .phone { display: flex; justify-content: center; }
+    .phone video { width: min(320px, 100%); border-radius: 18px; box-shadow: 0 20px 60px rgba(40, 40, 120, 0.18); }
+    ul.points { padding: 0; list-style: none; margin: 0; }
+    ul.points li { padding-left: 28px; position: relative; margin-bottom: 12px; color: var(--muted); }
+    ul.points li::before { content: "✓"; position: absolute; left: 0; color: var(--brand); font-weight: 600; }
+    ul.points b { color: var(--text); font-weight: 600; }
+    footer { margin: 90px 0 40px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    @media (max-width: 820px) {
+      .grid, .split { grid-template-columns: 1fr; }
+      nav .links a.hide-sm { display: none; }
+      .lead { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="#"><span class="logo"></span>scriptcast</a>
+      <div class="links">
+        <a class="hide-sm" href="#how">How it works</a>
+        <a class="hide-sm" href="#studio">Studio</a>
+        <a href="https://github.com/vipul080/scriptcast#readme">Docs</a>
+        <a href="https://github.com/vipul080/scriptcast">GitHub</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <h1>Polished demo videos,<br><span>from a short script.</span></h1>
+      <p class="lead">Describe your demo in a few lines, or just click around your site. scriptcast records it and adds the auto-zoom, smooth cursor and captions for you. Change your UI, re-run, get a fresh video.</p>
+      <div class="cta">
+        <button class="cmd" id="copy" title="Copy to clipboard"><span><b>$</b> npx scriptcast studio</span><small id="copied">copy</small></button>
+        <a class="btn" href="https://github.com/vipul080/scriptcast">Star on GitHub</a>
+      </div>
+      <div class="demo">
+        <video src="assets/demo.mp4" autoplay muted loop playsinline preload="auto"></video>
+      </div>
+      <p class="caption">Made by scriptcast from a 13-step script, and re-recorded automatically on every release.</p>
+    </header>
+
+    <section id="how">
+      <h2>No screen recorder. No editing.</h2>
+      <p class="sub">Recording demos by hand is slow, and they go stale the moment your UI changes. With scriptcast, the demo is a script you can re-run any time.</p>
+      <div class="grid">
+        <div class="card"><div class="icon">✍️</div><h3>Write it like you'd say it</h3><p><code>click: Save</code>, <code>type: hello</code>, <code>say: Invite your team</code>. It finds the right button the way a person would.</p></div>
+        <div class="card"><div class="icon">🎬</div><h3>Looks edited, isn't</h3><p>The camera zooms in on the action and pulls back to show results. Smooth cursor, click effects, captions and a framed window.</p></div>
+        <div class="card"><div class="icon">🔁</div><h3>Never out of date</h3><p>A GitHub Action re-records your demo on every release and commits the fresh video and GIF.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="split">
+        <div>
+          <h2>Ten lines in, video out</h2>
+          <p class="sub">Point at things the way you'd describe them: button text, field labels, any visible text. If two things match, scriptcast picks the best one and tells you.</p>
+          <ul class="points">
+            <li><b>Check in seconds:</b> <code>scriptcast check</code> runs every step without recording.</li>
+            <li><b>Apps behind a login:</b> sign in off camera, passwords from environment variables.</li>
+            <li><b>Nothing else to install:</b> ffmpeg, fonts and the browser come with it.</li>
+          </ul>
+        </div>
+<pre><span class="k">url</span>: <span class="s">http://localhost:3000</span>
+<span class="k">steps</span>:
+  - <span class="k">say</span>: <span class="s">Create a report in seconds</span>
+  - <span class="k">click</span>: <span class="s">New report</span>
+  - <span class="k">type</span>: { <span class="k">into</span>: <span class="s">Report name</span>, <span class="k">text</span>: <span class="s">Weekly users</span> }
+  - <span class="k">click</span>: <span class="s">Email me every Monday</span>
+  - <span class="k">click</span>: <span class="s">Create report</span>
+  - <span class="k">say</span>: <span class="s">It's live right away</span>
+
+<span class="c"># npx scriptcast record demo.yml</span></pre>
+      </div>
+    </section>
+
+    <section id="studio">
+      <h2>Prefer buttons? Use the studio.</h2>
+      <p class="sub">Run <code>npx scriptcast studio</code> and press <b>Record my clicks</b>. Use your site normally and every click and keystroke becomes a step. Add captions, press <b>Make video</b>, download.</p>
+      <img class="shot" src="assets/studio.png" alt="scriptcast studio: a step editor with a video preview" loading="lazy">
+    </section>
+
+    <section>
+      <div class="split">
+        <div class="phone"><video src="assets/phone.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
+        <div>
+          <h2>Phone demos, too</h2>
+          <p class="sub">Add <code>device: iphone</code> and scriptcast records your site's mobile layout inside a phone frame, with taps shown as touches. You get a vertical video ready for Reels, Shorts or your app's landing page.</p>
+          <ul class="points">
+            <li><b>Window styles:</b> light, dark, or no window at all.</li>
+            <li><b>Backgrounds:</b> seven gradients or any color.</li>
+            <li><b>GIF or MP4:</b> sized for READMEs or social posts.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Keep it fresh with GitHub Actions</h2>
+      <p class="sub">Your demo re-records itself on every release, so it always shows what your product looks like today.</p>
+<pre><span class="k">- uses</span>: <span class="s">vipul080/scriptcast@v0</span>
+  <span class="k">with</span>:
+    <span class="k">script</span>: <span class="s">demo.yml</span>
+    <span class="k">start</span>: <span class="s">npm run dev</span>
+    <span class="k">wait-on</span>: <span class="s">http://localhost:3000</span>
+    <span class="k">commit</span>: <span class="s">true</span></pre>
+    </section>
+
+    <footer>
+      <span>scriptcast is free and open source (MIT).</span>
+      <span><a href="https://github.com/vipul080/scriptcast">GitHub</a> · <a href="https://www.npmjs.com/package/scriptcast">npm</a> · <a href="https://github.com/vipul080/scriptcast/issues">Report a bug</a></span>
+    </footer>
+  </div>
+  <script>
+    document.getElementById('copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText('npx scriptcast studio');
+        document.getElementById('copied').textContent = 'copied!';
+        setTimeout(() => (document.getElementById('copied').textContent = 'copy'), 1500);
+      } catch {}
+    });
+  </script>
+</body>
+</html>

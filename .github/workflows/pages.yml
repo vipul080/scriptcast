@@ -1,0 +1,42 @@
+# Publishes the website in docs/ (plus the demo videos and fonts) to GitHub Pages.
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths: [docs/**, assets/**, fonts/**, .github/workflows/pages.yml]
+  # Commits made by the demo workflow don't trigger other workflows, so rebuild after it runs.
+  workflow_run:
+    workflows: [Update README demo]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -r docs/. _site/
+          cp -r assets fonts _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

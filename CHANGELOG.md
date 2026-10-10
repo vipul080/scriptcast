@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+- **Smoother camera**: actions that follow each other closely share one zoom level, so the camera pans between them instead of pumping in and out on every step.
+- **Shows the result of a click**: when the clicked thing disappears (a modal's submit button, a menu item), the camera pulls back right away so viewers see what happened.
+- **Natural cursor**: the cursor moves along a gentle curve instead of a ruler-straight line.
+- **Fade in and out** at the start and end, so GIFs loop smoothly. Turn it off with `output.fade: false`.
+- **Website**: https://vipul080.github.io/scriptcast/
+
 ## 0.6.0
 
 - **Phone demos**: `device: iphone` or `device: android` records your site's mobile layout inside a phone frame (status bar, Dynamic Island, home indicator) as a vertical 1080×1920 video. Taps show as a touch circle, and the camera zooms more gently on small screens.
