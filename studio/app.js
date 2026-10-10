@@ -362,6 +362,7 @@ function onEvent(e) {
     case 'log':
       appendLog(e.text);
       if (e.text.startsWith('● Making the GIF')) setStatus('Making the GIF…', 'busy');
+      if (e.text.startsWith('● First run')) setStatus('Downloading the browser scriptcast uses. This happens only once and takes about a minute…', 'busy');
       break;
     case 'start':
       setBusy(e.kind);

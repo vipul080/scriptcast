@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- The studio explains the one-time browser download the first time you press **Record my clicks**, instead of just saying "Opening a browser window".
+- New end-to-end test that uses the studio like a first-time user: empty folder, build steps with buttons, check, make a video.
+
 ## 0.5.0
 
 - **scriptcast studio** (`npx scriptcast studio`): a visual editor in your browser. Add steps with buttons and dropdowns, press **Record my clicks** to turn your own clicking and typing into steps, then check, record, watch and download the video without touching the terminal again.
