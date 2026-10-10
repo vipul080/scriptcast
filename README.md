@@ -21,6 +21,7 @@ Recording a product demo by hand is slow: you click through your app, flub a ste
 - 🖱️ **Smooth cursor** that glides between clicks, with click ripples
 - ⌨️ **Natural typing**, letter by letter
 - 💬 **Captions** that explain each step (`say: Invite your team`)
+- 🖥️ **Studio app**: build demos with buttons, or just click around your site and let it write the steps
 - 🎨 **Beautiful framing**: a gradient background, browser window and soft shadow
 - 🔁 **Always up to date**: a GitHub Action re-records your demo on every release
 
@@ -35,6 +36,22 @@ npx scriptcast record demo.yml   # makes the video
 That's it, you get `demo.mp4` (and `demo.gif` if you ask for one).
 
 > Requires Node 18+. Nothing else to install: scriptcast brings its own ffmpeg, and downloads its browser automatically the first time it runs.
+
+## Prefer buttons to YAML? Use the studio
+
+```bash
+npx scriptcast studio
+```
+
+It opens a friendly editor in your browser:
+
+- **Record my clicks**: a browser window opens, you use your site normally, and every click and bit of typing becomes a step.
+- Add **captions**, waits and other steps with buttons and dropdowns.
+- **Check steps** and **Make video**, then watch, download (MP4 or GIF) or open the folder.
+
+Everything is saved to a normal `demo.yml`, so you can switch between the studio and the command line any time.
+
+![scriptcast studio](assets/studio.png)
 
 ## Writing a script
 
@@ -131,6 +148,7 @@ scriptcast record demo.yml -o out.mp4 # choose output file
 scriptcast record demo.yml --gif      # also export a GIF
 scriptcast record demo.yml --headed   # watch the browser while it records
 scriptcast init                       # create a starter script
+scriptcast studio                     # open the visual editor
 ```
 
 ## Keep your demo up to date (GitHub Action)
@@ -199,6 +217,8 @@ npm run demo   # renders examples/dashboard/demo.mp4
 - [x] Smart element matching with `in:` / `nth:`
 - [x] `scriptcast check` dry runs
 - [x] Apps behind a login (`setup:` + saved sessions)
+- [x] Studio: visual editor with click recording
+- [ ] Desktop app (no terminal needed)
 - [x] GitHub Action that keeps demo videos up to date
 - [ ] Dark-mode window theme and custom window styles
 - [ ] Mobile viewports with device frames

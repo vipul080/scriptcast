@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Command } from 'commander';
-import { check, record } from './recorder.js';
-import { render, toGif } from './renderer.js';
+import { makeVideo } from './pipeline.js';
+import { check } from './recorder.js';
 import { loadScript } from './script.js';
+import { startStudio } from './studio/server.js';
 
 const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string };
 
@@ -67,25 +68,12 @@ program
     if (opts.out) script.output.file = resolve(opts.out);
     if (opts.gif) script.output.gif = true;
 
-    mkdirSync(dirname(script.output.file), { recursive: true });
-
-    console.log(`● Recording ${script.displayUrl}`);
-    const rec = await record(script, { headed: opts.headed, log: (m) => console.log(m) });
-
-    await render(rec, script.output, script.displayUrl, progressPrinter());
-    console.log(`✔ ${script.output.file}`);
-    const outputs: Record<string, string> = { video: script.output.file };
-
-    if (script.output.gif) {
-      const gif = script.output.file.replace(/\.[^.]+$/, '') + '.gif';
-      await toGif(script.output.file, gif, { width: script.output.gifWidth, fps: script.output.gifFps, colors: script.output.gifColors });
-      console.log(`✔ ${gif}`);
-      outputs.gif = gif;
-    }
+    const outputs = await makeVideo(script, { headed: opts.headed, log: (m) => console.log(m), onProgress: progressPrinter() });
 
     // When running inside GitHub Actions, expose the file paths as step outputs.
     if (process.env.GITHUB_OUTPUT) {
-      appendFileSync(process.env.GITHUB_OUTPUT, Object.entries(outputs).map(([k, v]) => `${k}=${v}\n`).join(''));
+      const lines = Object.entries(outputs).filter(([, v]) => v).map(([k, v]) => `${k}=${v}\n`);
+      appendFileSync(process.env.GITHUB_OUTPUT, lines.join(''));
     }
   });
 
@@ -116,6 +104,19 @@ program
     }
     writeFileSync(file, STARTER);
     console.log(`✔ Created ${file}. Edit the steps, then run: scriptcast check ${file}`);
+  });
+
+program
+  .command('studio')
+  .argument('[file]', 'script to open (created if it does not exist)', 'demo.yml')
+  .option('-p, --port <port>', 'port to run on', '4321')
+  .option('--no-open', "don't open the browser automatically")
+  .description('open a friendly editor in your browser to build and record demos')
+  .action(async (file: string, opts: { port: string; open: boolean }) => {
+    const { link } = await startStudio(file, { port: Number(opts.port), open: opts.open });
+    console.log(`● scriptcast studio is running for ${file}`);
+    console.log(`  ${link}`);
+    console.log('  Keep this terminal open while you use it. Press Ctrl+C to stop.');
   });
 
 program.parseAsync().catch((err: Error) => {

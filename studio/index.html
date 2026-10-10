@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>scriptcast studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <strong>scriptcast</strong><span class="badge">studio</span>
+    </div>
+    <div class="file">
+      <span id="file-name">demo.yml</span>
+      <span id="save-state" class="save-state">Loading…</span>
+    </div>
+    <div class="top-actions">
+      <button id="check-btn" class="btn ghost" title="Run every step quickly without recording">Check steps</button>
+      <button id="record-btn" class="btn primary"><span class="rec-dot"></span>Make video</button>
+    </div>
+  </header>
+
+  <div id="problem" class="problem" hidden></div>
+
+  <main class="layout">
+    <section class="editor">
+      <div class="card">
+        <h2>Start page</h2>
+        <div class="row">
+          <label class="field grow">
+            <span>Website to record</span>
+            <input id="url" placeholder="http://localhost:3000" spellcheck="false">
+          </label>
+          <label class="field">
+            <span>Address bar shows</span>
+            <input id="display-url" placeholder="myapp.com" spellcheck="false">
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Steps</h2>
+          <button id="capture-btn" class="btn capture">
+            <span class="rec-dot"></span><span id="capture-label">Record my clicks</span>
+          </button>
+        </div>
+        <div id="capture-banner" class="capture-banner" hidden>
+          <strong>Recording your clicks.</strong>
+          Use the browser window that just opened: click buttons, type in fields, press Enter.
+          Steps appear here as you go. Close that window or press <em>Stop</em> when you're done.
+        </div>
+        <ol id="steps" class="steps"></ol>
+        <div id="empty" class="empty" hidden>
+          <p><strong>No steps yet.</strong></p>
+          <p>Press <em>Record my clicks</em> and use your site normally, or add steps one by one below.</p>
+        </div>
+        <div class="add-bar" data-list="steps"></div>
+      </div>
+
+      <details class="card" id="login-card">
+        <summary><h2>Login <span class="muted">(optional)</span></h2></summary>
+        <p class="hint">These steps run <strong>before</strong> recording and never appear in the video. Use them to sign in.
+          For passwords, type <code>${PASSWORD}</code> and start the studio with <code>PASSWORD=… npx scriptcast studio</code>.</p>
+        <ol id="setup" class="steps"></ol>
+        <div class="add-bar" data-list="setup"></div>
+        <label class="check-field">
+          <input type="checkbox" id="remember-login">
+          <span>Stay logged in between videos (saves cookies to <code>.scriptcast/session.json</code>)</span>
+        </label>
+      </details>
+
+      <div class="card">
+        <h2>Look</h2>
+        <div class="field">
+          <span>Background</span>
+          <div id="backgrounds" class="swatches"></div>
+        </div>
+        <label class="check-field">
+          <input type="checkbox" id="gif">
+          <span>Also make a GIF (great for a GitHub README)</span>
+        </label>
+      </div>
+    </section>
+
+    <aside class="output">
+      <div class="card sticky">
+        <h2>Video</h2>
+        <div id="status" class="status">Add some steps, then press <strong>Make video</strong>.</div>
+        <div id="progress" class="progress" hidden><div></div></div>
+        <div id="player" class="player" hidden>
+          <video id="video" controls playsinline muted loop></video>
+          <div class="row">
+            <a id="dl-video" class="btn ghost" download="demo.mp4">Download MP4</a>
+            <a id="dl-gif" class="btn ghost" download="demo.gif" hidden>Download GIF</a>
+            <button id="reveal" class="btn ghost">Show in folder</button>
+          </div>
+        </div>
+        <details class="log-box">
+          <summary>Details</summary>
+          <pre id="log"></pre>
+        </details>
+        <details class="log-box">
+          <summary>Script (YAML)</summary>
+          <div class="yaml-head"><span class="muted">Saved to <span id="file-path"></span></span><button id="copy-yaml" class="link">Copy</button></div>
+          <pre id="yaml"></pre>
+        </details>
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

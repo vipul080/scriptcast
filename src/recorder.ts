@@ -257,7 +257,7 @@ class Session {
   }
 }
 
-async function launch(headed: boolean, log: (msg: string) => void): Promise<Browser> {
+export async function launch(headed: boolean, log: (msg: string) => void): Promise<Browser> {
   try {
     return await chromium.launch({ headless: !headed });
   } catch (err) {

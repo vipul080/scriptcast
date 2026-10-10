@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- **scriptcast studio** (`npx scriptcast studio`): a visual editor in your browser. Add steps with buttons and dropdowns, press **Record my clicks** to turn your own clicking and typing into steps, then check, record, watch and download the video without touching the terminal again.
+- Click recording describes targets the way a person would (button text, field labels) and never captures real passwords: it writes `${PASSWORD}` instead.
+- The status now says when the GIF is being made.
+
 ## 0.4.0
 
 - **Apps behind a login**: `setup:` steps run before recording and never appear in the video. `session:` saves the logged-in state and reuses it next time.
