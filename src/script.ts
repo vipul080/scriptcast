@@ -42,6 +42,11 @@ export interface Script {
   // CSS selectors to hide while recording (cookie banners, chat widgets, ...).
   hide: string[];
   output: OutputOptions;
+  // Steps that run before recording starts and never appear in the video (e.g. logging in).
+  setup: Step[];
+  // Where to save the browser session (cookies, local storage) after setup. If the file
+  // already exists, scriptcast starts from it and skips setup.
+  session?: string;
   steps: Step[];
 }
 
@@ -78,8 +83,8 @@ export function describeTarget(t: Target): string {
   return s;
 }
 
-function parseStep(raw: unknown, index: number, baseDir: string, startUrl: string): Step {
-  const where = `step ${index + 1}`;
+function parseStep(raw: unknown, index: number, baseDir: string, startUrl: string, section = 'step'): Step {
+  const where = `${section} ${index + 1}`;
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     throw new ScriptError(`${where}: each step should look like "- click: Login"`);
   }
@@ -136,16 +141,37 @@ function parseStep(raw: unknown, index: number, baseDir: string, startUrl: strin
   }
 }
 
-export function parseScript(source: string, baseDir: string): Script {
+// Replace ${NAME} in any string with the environment variable NAME, so secrets
+// like passwords can come from the environment (or CI secrets) instead of the script.
+function interpolate(value: unknown, env: Record<string, string | undefined>): unknown {
+  if (typeof value === 'string') {
+    // $${NAME} is an escape for a literal ${NAME}.
+    return value.replace(/(\$?)\$\{(\w+)\}/g, (match: string, escaped: string, name: string) => {
+      if (escaped) return match.slice(1);
+      const v = env[name];
+      if (v === undefined) throw new ScriptError(`Your script uses \${${name}} but the environment variable ${name} is not set`);
+      return v;
+    });
+  }
+  if (Array.isArray(value)) return value.map((v) => interpolate(v, env));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, interpolate(v, env)]));
+  }
+  return value;
+}
+
+export function parseScript(source: string, baseDir: string, env: Record<string, string | undefined> = process.env): Script {
   let doc: Record<string, any>;
   try {
     doc = parse(source) ?? {};
   } catch (err) {
     throw new ScriptError(`Your script isn't valid YAML: ${(err as Error).message}`);
   }
+  doc = interpolate(doc, env) as Record<string, any>;
 
   if (typeof doc.url !== 'string') throw new ScriptError('Your script needs a "url:" to start from');
   if (!Array.isArray(doc.steps) || doc.steps.length === 0) throw new ScriptError('Your script needs a list of "steps:"');
+  if (doc.setup !== undefined && !Array.isArray(doc.setup)) throw new ScriptError('"setup:" should be a list of steps, like "steps:"');
 
   const url = resolveUrl(doc.url, baseDir);
   const out = doc.output ?? {};
@@ -166,6 +192,8 @@ export function parseScript(source: string, baseDir: string): Script {
       height: out.height ?? 1080,
       background: out.background ?? 'aurora',
     },
+    setup: doc.setup === undefined ? [] : (Array.isArray(doc.setup) ? doc.setup : []).map((s: unknown, i: number) => parseStep(s, i, baseDir, url, 'setup step')),
+    session: typeof doc.session === 'string' ? resolve(baseDir, doc.session) : undefined,
     steps: doc.steps.map((s: unknown, i: number) => parseStep(s, i, baseDir, url)),
   };
 }

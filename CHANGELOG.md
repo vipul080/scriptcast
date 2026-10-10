@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
+
+- **Apps behind a login**: `setup:` steps run before recording and never appear in the video. `session:` saves the logged-in state and reuses it next time.
+- **Environment variables** in scripts: `${DEMO_PASSWORD}` keeps secrets out of your script (and works with GitHub Actions secrets).
+- **About 4x faster rendering** (a 19 second demo now renders in under 5 seconds).
 
 - New hero example: an analytics dashboard with a modal, captions and a live-updating table (`examples/dashboard`).
 - `output.gifWidth`, `output.gifFps` and `output.gifColors` to trade GIF quality for file size.

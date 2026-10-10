@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Login fixture</title></head>
+<body>
+  <main id="app"></main>
+  <script>
+    const app = document.getElementById('app');
+    if (localStorage.getItem('user')) {
+      app.innerHTML = '<h1>Dashboard</h1><p>Welcome back, Ada</p>';
+    } else {
+      app.innerHTML = `
+        <form id="login">
+          <label>Email <input id="email"></label>
+          <label>Password <input id="password" type="password"></label>
+          <button>Sign in</button>
+          <p id="error"></p>
+        </form>`;
+      document.getElementById('login').addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (document.getElementById('password').value !== 'correct horse') {
+          document.getElementById('error').textContent = 'Wrong password';
+          return;
+        }
+        localStorage.setItem('user', document.getElementById('email').value);
+        location.reload();
+      });
+    }
+  </script>
+</body>
+</html>

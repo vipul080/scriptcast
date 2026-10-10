@@ -75,7 +75,25 @@ When several things match, scriptcast picks the best one:
 - click: { text: Save, nth: 2 }         # the second Save on the page
 ```
 
-### Steps
+### Apps behind a login
+
+Put the login in `setup:`. It runs before recording starts, so it never shows up in the video:
+
+```yaml
+url: http://localhost:3000/dashboard
+setup:
+  - type: { into: Email, text: demo@example.com }
+  - type: { into: Password, text: "${DEMO_PASSWORD}" }
+  - click: Sign in
+  - waitFor: Dashboard
+session: .scriptcast/session.json   # optional: stay logged in between runs
+steps:
+  - click: New project
+```
+
+- `${DEMO_PASSWORD}` is read from an environment variable, so secrets never live in the script. (Write `$${...}` if you need a literal `${...}`.)
+- With `session:`, scriptcast saves the logged-in browser state after setup and reuses it next time, skipping setup. Delete the file to log in again. It contains cookies, so add it to `.gitignore`.
+
 
 | Step | Example | What it does |
 | --- | --- | --- |
@@ -145,6 +163,8 @@ jobs:
           wait-on: http://localhost:3000    # and wait until it's up
           args: --gif -o docs/demo.mp4
           commit: true                      # commit the fresh video + GIF
+        env:
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}   # if your script logs in
 ```
 
 | Input | | |
@@ -178,6 +198,7 @@ npm run demo   # renders examples/dashboard/demo.mp4
 - [x] Captions (`say: Now invite your team`)
 - [x] Smart element matching with `in:` / `nth:`
 - [x] `scriptcast check` dry runs
+- [x] Apps behind a login (`setup:` + saved sessions)
 - [x] GitHub Action that keeps demo videos up to date
 - [ ] Dark-mode window theme and custom window styles
 - [ ] Mobile viewports with device frames

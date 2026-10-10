@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 import { chromium, type Browser, type Page } from 'playwright';
 import { find, NotFound, type Match } from './locate.js';
 import { describeTarget, type Script, type Step, type Target } from './script.js';
@@ -276,34 +277,66 @@ async function withPage<T>(script: Script, opts: RunOptions, fn: (page: Page, se
   const log = opts.log ?? (() => {});
   const browser = await launch(opts.headed ?? false, log);
   try {
-    const context = await browser.newContext({ viewport: script.viewport, deviceScaleFactor: DEVICE_SCALE });
+    const savedSession = script.session && existsSync(script.session) ? script.session : undefined;
+    const context = await browser.newContext({
+      viewport: script.viewport,
+      deviceScaleFactor: DEVICE_SCALE,
+      storageState: savedSession,
+    });
     const page = await context.newPage();
     const hideCss = script.hide.length ? `${script.hide.join(', ')} { display: none !important; }` : '';
     const applyHide = () => (hideCss ? page.addStyleTag({ content: hideCss }).then(() => {}, () => {}) : Promise.resolve());
     page.on('domcontentloaded', applyHide);
-    try {
-      await page.goto(script.url, { waitUntil: 'load' });
-    } catch (err) {
-      throw new StepError(`Couldn't open ${script.url}. Is your app running? (${(err as Error).message.split('\n')[0]})`);
+
+    const open = async () => {
+      try {
+        await page.goto(script.url, { waitUntil: 'load' });
+      } catch (err) {
+        throw new StepError(`Couldn't open ${script.url}. Is your app running? (${(err as Error).message.split('\n')[0]})`);
+      }
+      await page.waitForLoadState('networkidle', { timeout: opts.fast ? 1500 : 4000 }).catch(() => {});
+      await applyHide();
+    };
+    await open();
+
+    if (savedSession) {
+      log(`  using saved session ${relative(process.cwd(), savedSession)} (delete it to run setup again)`);
+    } else if (script.setup.length) {
+      log('  setup (not recorded)');
+      const setup = new Session(page, script.viewport, { ...opts, fast: true, applyHide });
+      await runSteps(script.setup, setup, log, 'Setup step');
+      if (script.session) {
+        mkdirSync(dirname(script.session), { recursive: true });
+        await context.storageState({ path: script.session });
+        log(`  saved session to ${relative(process.cwd(), script.session)}`);
+      }
+      // Start the video from the script's url, now logged in.
+      await open();
     }
-    await page.waitForLoadState('networkidle', { timeout: opts.fast ? 1500 : 4000 }).catch(() => {});
-    await applyHide();
+
     const session = new Session(page, script.viewport, { ...opts, applyHide });
     await page.mouse.move(session.cursor.x, session.cursor.y);
-    return await fn(page, session);
+    try {
+      return await fn(page, session);
+    } catch (err) {
+      if (savedSession && err instanceof StepError) {
+        err.message += `\n  If your saved login expired, delete ${relative(process.cwd(), savedSession)} and run again.`;
+      }
+      throw err;
+    }
   } finally {
     await browser.close();
   }
 }
 
-async function runSteps(script: Script, session: Session, log: (msg: string) => void) {
-  for (const [i, step] of script.steps.entries()) {
-    log(`  ${String(i + 1).padStart(2)}/${script.steps.length}  ${describe(step)}`);
+async function runSteps(steps: Step[], session: Session, log: (msg: string) => void, label = 'Step') {
+  for (const [i, step] of steps.entries()) {
+    log(`  ${String(i + 1).padStart(2)}/${steps.length}  ${describe(step)}`);
     try {
       await session.run(step);
     } catch (err) {
       const reason = err instanceof StepError || err instanceof NotFound ? err.message : (err as Error).message.split('\n')[0];
-      throw new StepError(`Step ${i + 1} (${describe(step)}) failed: ${reason}`);
+      throw new StepError(`${label} ${i + 1} (${describe(step)}) failed: ${reason}`);
     }
   }
 }
@@ -312,7 +345,7 @@ async function runSteps(script: Script, session: Session, log: (msg: string) => 
 export async function check(script: Script, opts: RunOptions = {}): Promise<{ warnings: number }> {
   const log = opts.log ?? (() => {});
   return withPage(script, { ...opts, fast: true }, async (_page, session) => {
-    await runSteps(script, session, log);
+    await runSteps(script.steps, session, log);
     return { warnings: session.warnings };
   });
 }
@@ -336,7 +369,7 @@ export async function record(script: Script, opts: RunOptions = {}): Promise<Rec
 
     const start = now();
     await sleep(600);
-    await runSteps(script, session, log);
+    await runSteps(script.steps, session, log);
     await sleep(1200);
     const end = now();
     await cdp.send('Page.stopScreencast').catch(() => {});

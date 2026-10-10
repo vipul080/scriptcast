@@ -56,6 +56,22 @@ steps:
     assert.deepEqual([custom.gifWidth, custom.gifFps, custom.gifColors], [800, 12, 256], 'colors are capped at 256');
   });
 
+  it('fills in ${VARS} from the environment', () => {
+    const s = parseScript('url: x.com\nsteps:\n  - type: "${PASSWORD}"\n  - type: "$${LITERAL}"', '/tmp', { PASSWORD: 'hunter2' });
+    assert.deepEqual(s.steps, [
+      { action: 'type', text: 'hunter2' },
+      { action: 'type', text: '${LITERAL}' },
+    ]);
+    assert.throws(() => parseScript('url: x.com\nsteps: [{ type: "${MISSING}" }]', '/tmp', {}), /environment variable MISSING is not set/);
+  });
+
+  it('reads setup steps and the session path', () => {
+    const s = parseScript('url: x.com\nsession: .auth/s.json\nsetup: [{ click: Sign in }]\nsteps: [{ wait: 1s }]', '/proj');
+    assert.deepEqual(s.setup, [{ action: 'click', target: { text: 'Sign in' } }]);
+    assert.equal(s.session, '/proj/.auth/s.json');
+    assert.throws(() => parse('url: x.com\nsetup: [{ clik: x }]\nsteps: [{ wait: 1s }]'), /setup step 1: unknown action/);
+  });
+
   it('gives helpful errors', () => {
     assert.throws(() => parse('steps: []'), /needs a "url:"/);
     assert.throws(() => parse('url: x.com\nsteps: [{ clik: Save }]'), /unknown action "clik"/);
